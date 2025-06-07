@@ -195,6 +195,26 @@ function jacobo_theme_enqueue_theme_assets() {
         );
     }
 
+    // Enqueue script for pricing page only on its specific template page
+    if ( is_page_template('template-precios.php') ) {
+        wp_enqueue_script(
+            'jacobo-page-precios',
+            get_template_directory_uri() . '/js/page-precios.js',
+            array(), // No dependencies for this simple script
+            filemtime(get_template_directory() . '/js/page-precios.js'), // Versioning
+            true // Load in footer
+        );
+        wp_localize_script(
+            'jacobo-page-precios',      // El handle del script que acabas de encolar
+            'jacoboPreciosData',        // El nombre del objeto JavaScript que contendrá los datos
+            array(
+                'checkout_base_url' => home_url('/checkout/?add-to-cart='),
+                // Aquí podrías añadir otros datos si fueran necesarios en el futuro,
+                // por ejemplo, nonces si hicieras llamadas AJAX desde esta página.
+            )
+        );
+    }
+
     // Enqueue script for content calendar only on its specific template page
     if ( is_page_template('template-content-calendar.php') ) {
         wp_enqueue_script(
@@ -304,3 +324,78 @@ function jacobo_login_logo_url_title() {
     return get_bloginfo( 'name' );
 }
 add_filter( 'login_headertext', 'jacobo_login_logo_url_title' );
+
+// Registrar Custom Post Type para Planes de Precios
+function jacobo_register_plan_cpt() {
+
+    $labels = array(
+        'name'                  => _x( 'Planes', 'Post Type General Name', 'jacobo-theme' ),
+        'singular_name'         => _x( 'Plan', 'Post Type Singular Name', 'jacobo-theme' ),
+        'menu_name'             => __( 'Planes de Precios', 'jacobo-theme' ),
+        'name_admin_bar'        => __( 'Plan', 'jacobo-theme' ),
+        'archives'              => __( 'Archivo de Planes', 'jacobo-theme' ),
+        'attributes'            => __( 'Atributos del Plan', 'jacobo-theme' ),
+        'parent_item_colon'     => __( 'Plan Padre:', 'jacobo-theme' ),
+        'all_items'             => __( 'Todos los Planes', 'jacobo-theme' ),
+        'add_new_item'          => __( 'Añadir Nuevo Plan', 'jacobo-theme' ),
+        'add_new'               => __( 'Añadir Nuevo', 'jacobo-theme' ),
+        'new_item'              => __( 'Nuevo Plan', 'jacobo-theme' ),
+        'edit_item'             => __( 'Editar Plan', 'jacobo-theme' ),
+        'update_item'           => __( 'Actualizar Plan', 'jacobo-theme' ),
+        'view_item'             => __( 'Ver Plan', 'jacobo-theme' ),
+        'view_items'            => __( 'Ver Planes', 'jacobo-theme' ),
+        'search_items'          => __( 'Buscar Plan', 'jacobo-theme' ),
+        'not_found'             => __( 'No encontrado', 'jacobo-theme' ),
+        'not_found_in_trash'    => __( 'No encontrado en la papelera', 'jacobo-theme' ),
+        'featured_image'        => __( 'Imagen Destacada', 'jacobo-theme' ), // Aunque no la usemos ahora
+        'set_featured_image'    => __( 'Establecer imagen destacada', 'jacobo-theme' ),
+        'remove_featured_image' => __( 'Eliminar imagen destacada', 'jacobo-theme' ),
+        'use_featured_image'    => __( 'Usar como imagen destacada', 'jacobo-theme' ),
+        'insert_into_item'      => __( 'Insertar en el plan', 'jacobo-theme' ),
+        'uploaded_to_this_item' => __( 'Subido a este plan', 'jacobo-theme' ),
+        'items_list'            => __( 'Lista de planes', 'jacobo-theme' ),
+        'items_list_navigation' => __( 'Navegación de lista de planes', 'jacobo-theme' ),
+        'filter_items_list'     => __( 'Filtrar lista de planes', 'jacobo-theme' ),
+    );
+    $args = array(
+        'label'                 => __( 'Plan', 'jacobo-theme' ),
+        'description'           => __( 'Planes de suscripción para Jacobo', 'jacobo-theme' ),
+        'labels'                => $labels,
+        'supports'              => array( 'title', 'editor', 'custom-fields', 'page-attributes' ), // 'editor' para descripción, 'page-attributes' para 'plan_orden'
+        'hierarchical'          => false,
+        'public'                => true, // Hacerlo true para poder consultarlo con WP_Query y verlo individualmente si se desea
+        'show_ui'               => true,
+        'show_in_menu'          => true,
+        'menu_position'         => 5, // Debajo de "Entradas" o "Posts"
+        'menu_icon'             => 'dashicons-cart', // Icono de carrito
+        'show_in_admin_bar'     => true,
+        'show_in_nav_menus'     => true,
+        'can_export'            => true,
+        'has_archive'           => false, // No necesitamos una página de archivo para los planes por ahora
+        'exclude_from_search'   => true, // No incluir en búsquedas del sitio por defecto
+        'publicly_queryable'    => true, // Permitir consultas directas si es necesario
+        'capability_type'       => 'post', // O 'page' si se prefiere, 'post' es común para CPTs
+        'rewrite'               => array( 'slug' => 'planes-jacobo', 'with_front' => false ), // Slug para URLs amigables si se accede individualmente
+        'show_in_rest'          => true, // Habilitar para la API REST de WordPress
+    );
+    register_post_type( 'plan', $args );
+
+}
+add_action( 'init', 'jacobo_register_plan_cPT', 0 );
+
+// Flush rewrite rules on theme activation/deactivation or CPT registration for CPTs to work correctly
+// Esto es importante para que los permalinks del CPT funcionen inmediatamente después de la activación del tema.
+// Sin embargo, para desarrollo, a veces es más fácil ir a Ajustes > Enlaces Permanentes y guardar sin cambiar nada.
+function jacobo_theme_rewrite_flush() {
+    jacobo_register_plan_cpt(); // Asegurarse de que el CPT esté registrado
+    flush_rewrite_rules();
+}
+// Descomentar estas líneas temporalmente si los permalinks no funcionan tras añadir el CPT:
+// add_action( 'after_switch_theme', 'jacobo_theme_rewrite_flush' );
+// register_deactivation_hook( __FILE__, 'flush_rewrite_rules' ); // No usar __FILE__ aquí si el código está en functions.php, sino el path del plugin principal si fuera un plugin
+
+// Nota: Para `flush_rewrite_rules()` en un tema, es mejor hacerlo una vez.
+// Una forma común es guardando los Enlaces Permanentes en el admin de WP.
+// O en un hook de activación del tema. Para este ejercicio, el usuario puede simplemente
+// visitar Ajustes > Enlaces Permanentes en el admin de WP y hacer clic en "Guardar Cambios"
+// después de que este código se añada, para asegurar que los nuevos slugs de CPT funcionen.
