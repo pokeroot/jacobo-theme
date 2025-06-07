@@ -1,3 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+/* Clash Display y Satoshi podrían requerir una búsqueda específica o ser auto-hospedadas si no están fácilmente en Google Fonts.
+   Para este ejercicio, asumiremos que Sora e Inter son suficientes para títulos y cuerpo respectivamente,
+   o que Clash Display y Satoshi se manejarían de forma similar si estuvieran disponibles directamente.
+   Si Clash Display y Satoshi no están en Google Fonts, omite sus @import por ahora y usa Sora/Inter como fallback.
+   Por simplicidad, usaremos Sora para títulos y Inter para cuerpo en los estilos base. */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-azulNoche text-grisClaro font-inter;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sora text-blancoPuro; /* O un color de título específico si es diferente */
+    /* Añade aquí estilos comunes para headings si los hay (ej. font-weight) */
+  }
+  /* Puedes definir estilos más específicos para h1, h2, etc. si es necesario */
+  h1 { @apply text-4xl font-bold; } /* Ejemplo */
+  h2 { @apply text-3xl font-bold; } /* Ejemplo */
+  h3 { @apply text-2xl font-bold; } /* Ejemplo */
+
+  p {
+    @apply mb-4; /* Ejemplo de espaciado base para párrafos */
+  }
+
+  a {
+    @apply text-cianElectrico hover:text-violetaNeon transition-colors duration-150;
+    /* Estilo base para enlaces, se puede sobreescribir con clases de utilidad */
+  }
+}
+
+@layer utilities {
+  .animate-pulse-gradient {
+    animation: pulse-gradient-animation 15s infinite ease-in-out alternate; /* Duración más larga para sutileza */
+  }
+  @keyframes pulse-gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+}

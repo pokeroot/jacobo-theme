@@ -133,6 +133,15 @@ function jacobo_theme_enqueue_theme_assets() {
         'all'    // Media
     );
 
+    // Enqueue global scripts for header interactivity and other site-wide functions
+    wp_enqueue_script(
+        'jacobo-global-scripts',
+        get_template_directory_uri() . '/js/global-scripts.js',
+        array(), // No specific dependencies for this script
+        filemtime(get_template_directory() . '/js/global-scripts.js'), // Version based on file modification time
+        true // Load in footer
+    );
+
     // Enqueue general theme scripts if they exist and are needed on all pages
     // Example: navigation.js (ensure this file exists or remove this line)
     // wp_enqueue_script( 'jacobo-theme-navigation', get_template_directory_uri() . '/js/navigation.js', array(), '1.0.0', true );
