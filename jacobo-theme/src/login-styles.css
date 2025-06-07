@@ -1,38 +1,106 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Ejemplo de estilos para la página de login */
+/* Estilos para la página de login de Jacobo Theme */
 body.login {
-    @apply bg-gradient-to-br from-purple-600 to-blue-500 h-screen flex flex-col justify-center items-center;
+    @apply bg-azulNoche;
+    /* Fondo con animación de gradiente sutil */
+    background-image: linear-gradient(135deg, theme('colors.azulNoche'), theme('colors.violetaNeon / 10%'), theme('colors.cianElectrico / 10%'), theme('colors.azulNoche'));
+    background-size: 300% 300%;
+    animation: pulse-gradient-animation-login 20s infinite ease-in-out alternate; /* Consistente con front-page */
 }
 
+/* Contenedor del logo y formulario */
+#login {
+    @apply w-full max-w-md p-8 sm:p-10; /* Ajustar padding si es necesario */
+}
+
+/* Logo */
 #login h1 a {
-    @apply bg-contain w-48 h-24 bg-center;
-    background-image: url('../assets/images/jacobo-logo.png'); /* Asumimos que existirá un logo */
-    text-indent: -9999px;
+    @apply bg-contain bg-no-repeat w-auto h-16 mb-6 text-4xl font-sora font-bold text-blancoPuro text-center;
+    background-image: none; /* Remover imagen de logo de WP si la hubiera */
+    text-indent: 0; /* Asegurar que el texto sea visible */
+    pointer-events: none; /* Si el enlace ya va a home_url(), no necesitamos que el texto mismo sea clickable si interfiere con el estilo */
 }
+/* Para asegurar que el enlace del logo funcione correctamente, el title (Jacobo) se obtiene de PHP */
 
+
+/* Formulario de Login */
 #loginform {
-    @apply bg-white p-8 rounded-lg shadow-xl;
+    @apply bg-gray-800/30 backdrop-blur-md rounded-xl shadow-2xl border border-gray-700/50 p-8 mt-0;
+    /* mt-0 para que no haya margen extra si el h1 (logo) ya tiene margen inferior */
 }
 
-#login #nav, #login #backtoblog {
-    @apply text-center;
+#login form .input,
+#login input[type="text"],
+#login input[type="password"] {
+    @apply bg-gray-700/50 text-blancoPuro border-gray-600 placeholder-gray-400 rounded-md shadow-sm;
+    @apply focus:border-cianElectrico focus:ring-cianElectrico focus:ring-1 focus:outline-none;
+    @apply w-full p-3 my-2; /* my-2 para espaciado entre campos y labels si están encima */
 }
 
-#login #nav a, #login #backtoblog a {
-    @apply text-white hover:text-gray-200;
+#login label {
+    @apply font-inter text-sm text-grisClaro mb-1 block; /* mb-1 si el input está debajo */
 }
 
-.login .message {
-    @apply border-l-4 border-blue-500 bg-blue-50 p-4 mb-4 text-blue-700;
+/* Recordarme y Olvidaste tu contraseña */
+.forgetmenot, .login-remember { /* WordPress usa ambas clases a veces */
+    @apply mb-4;
+}
+.forgetmenot label, .login-remember label {
+  @apply text-sm text-grisClaro font-inter;
+}
+.forgetmenot input[type="checkbox"], .login-remember input[type="checkbox"] {
+  @apply border-gray-500 text-cianElectrico focus:ring-cianElectrico mr-1 align-middle;
+  /* Estilos para el checkbox */
 }
 
-/* Puedes añadir más estilos para los campos, botones, etc. */
-.login input[type="text"], .login input[type="password"] {
-    @apply border border-gray-300 rounded-md shadow-sm px-3 py-2 w-full focus:outline-none focus:ring-indigo-500 focus:border-indigo-500;
+/* Botón Principal "Acceder" */
+#loginform .wp-submit,
+#loginform .button-primary { /* Clases de WP para el botón principal */
+    @apply w-full font-inter text-blancoPuro text-base font-semibold px-8 py-3 rounded-lg;
+    @apply bg-gradient-to-r from-cianElectrico to-violetaNeon;
+    @apply hover:from-violetaNeon hover:to-cianElectrico;
+    @apply transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-violetaNeon/30;
+    @apply border-none mt-4; /* mt-4 para separarlo del "recordarme" */
 }
-.login input[type="submit"] {
-    @apply w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500;
+#loginform .wp-submit:active,
+#loginform .button-primary:active {
+    @apply transform scale-100; /* Quitar efecto de escala en active */
+}
+
+/* Enlaces Secundarios (debajo del formulario) */
+#nav, #backtoblog {
+    @apply text-center mt-6;
+}
+#nav a, #backtoblog a {
+    @apply text-sm font-inter text-grisClaro hover:text-cianElectrico transition-colors duration-150;
+}
+
+/* Mensajes de error, etc. */
+#login_error, .login .message {
+    @apply border-l-4 rounded-md mb-6 p-4 shadow-lg;
+    @apply text-blancoPuro; /* Texto general blanco */
+}
+#login_error { /* Específico para errores */
+    @apply bg-red-800/40 border-red-500;
+}
+.login .message:not(.error) { /* Mensajes informativos o de éxito (ej. contraseña restablecida) */
+    @apply bg-green-800/40 border-green-500;
+}
+.login .message.warning { /* Si hubiera mensajes de advertencia */
+     @apply bg-amber-800/40 border-amber-500;
+}
+
+
+/* Definición de la animación de gradiente si no está ya globalmente disponible para este CSS */
+/* (Ya la definimos en input.css, pero si login-styles.css es totalmente independiente, la necesitaría aquí) */
+/* Si src/input.css y src/login-styles.css se compilan juntos o si @tailwind base incluye animaciones, no es necesario repetirla. */
+/* Por seguridad, la incluimos aquí también si este archivo es procesado por Tailwind de forma aislada: */
+@layer utilities {
+  .animate-pulse-gradient { /* Nombre debe ser único o consistente con el global */
+    animation: pulse-gradient-animation-login 20s infinite ease-in-out alternate;
+  }
+  @keyframes pulse-gradient-animation-login {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 }
