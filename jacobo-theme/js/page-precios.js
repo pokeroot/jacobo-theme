@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (isAnnual) {
                 priceElement.textContent = formatPrice(precioAnual);
-                periodElement.textContent = '/año';
+                periodElement.textContent = 'usd/año';
                 ctaButton.href = checkoutBaseUrl + idProductoAnual;
                 // Para el texto de ahorro, necesitaríamos el valor. Asumamos que lo tenemos en un data-attribute del plan
                 // o que el $texto_ahorro_anual del PHP se puede acceder/inferir.
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } else {
                 priceElement.textContent = formatPrice(precioMensual);
-                periodElement.textContent = '/mes';
+                periodElement.textContent = 'usd/mes';
                 ctaButton.href = checkoutBaseUrl + idProductoMensual;
                 ahorroAnualElement.textContent = ''; // Limpiar texto de ahorro
             }
