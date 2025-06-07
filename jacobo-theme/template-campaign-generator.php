@@ -19,12 +19,16 @@ get_header();
                     <input type="text" name="campaign_name" id="campaign_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3" placeholder="Ej: Lanzamiento Verano Mascotas 2024">
                 </div>
                 <div class="mt-4">
-                    <label for="campaign_objective" class="block text-sm font-medium text-gray-700 mb-1">¿Cuál es el objetivo principal de tu campaña?</label>
-                    <input type="text" name="campaign_objective" id="campaign_objective" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3" placeholder="Ej: Incrementar ventas de nueva colección de collares para perros en un 20%">
+                    <label for="campaign_type" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Campaña</label>
+                    <select name="campaign_type" id="campaign_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3">
+                        <option value="post_individual">Post Individual</option>
+                        <option value="lanzamiento_producto">Lanzamiento de Producto</option>
+                        <option value="oferta_flash">Oferta Flash</option>
+                    </select>
                 </div>
             </section>
 
-            <section class="border-b pb-6">
+            <section id="originalProductSelection" style="display: none;" class="border-b pb-6">
                 <h2 class="text-xl font-semibold text-gray-700 mb-4">2. Selección de Productos</h2>
                 <div>
                     <label for="product_urls" class="block text-sm font-medium text-gray-700 mb-1">URLs de Productos de tu Tienda (uno por línea)</label>
@@ -37,6 +41,18 @@ get_header();
                 <div id="productPreviewArea" class="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <!-- Las previsualizaciones de productos aparecerán aquí -->
                 </div>
+            </section>
+
+            <section id="productSearchSection" style="display: none;" class="border-b pb-6">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">2. Búsqueda de Producto (para Lanzamiento)</h2>
+                <div>
+                    <label for="product_search_input" class="block text-sm font-medium text-gray-700 mb-1">Buscar Producto por Nombre o SKU</label>
+                    <input type="text" name="product_search_input" id="product_search_input" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-3" placeholder="Escribe para buscar tu producto...">
+                </div>
+                <div id="productSearchResults" class="mt-4 space-y-2">
+                    <p class="text-sm text-gray-500">Los resultados de la búsqueda aparecerán aquí.</p>
+                </div>
+                <input type="hidden" id="selected_product_id" name="selected_product_id">
             </section>
 
             <section class="border-b pb-6">
@@ -76,8 +92,7 @@ get_header();
         <div id="resultsArea" class="hidden mt-12 bg-gray-50 p-8 rounded-xl shadow-xl">
             <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🚀 ¡Tu Campaña está Lista! 🚀</h2>
             <div id="generatedContent" class="space-y-6">
-                <!-- El contenido generado (texto e imágenes) se mostrará aquí -->
-                <p class="text-gray-600 text-center">El contenido de tu campaña aparecerá aquí. Prepara tu varita para copiar y pegar.</p>
+                <div class="text-center text-gray-500"><p>Aquí se mostrarán las piezas de contenido de tu campaña.</p><p>Podrían ser tarjetas individuales, elementos de un acordeón, etc.</p></div>
             </div>
         </div>
     </div>
