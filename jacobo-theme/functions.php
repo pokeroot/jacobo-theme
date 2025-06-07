@@ -162,6 +162,30 @@ function jacobo_theme_enqueue_theme_assets() {
         );
     }
 
+    // Enqueue script for dashboard suggestions only on the dashboard page
+    if (is_page_template('template-dashboard.php')) {
+        wp_enqueue_script(
+            'jacobo-dashboard-suggestions',
+            get_template_directory_uri() . '/js/dashboard-suggestions.js',
+            array(), // No dependencies for this simple script
+            filemtime(get_template_directory() . '/js/dashboard-suggestions.js'), // Versioning
+            true // Load in footer
+        );
+
+        // Localize script to pass data like the campaign planner URL
+        $planner_page = get_page_by_path('generador-de-campanas'); // Slug of your campaign planner page
+        $planner_url = $planner_page ? get_permalink($planner_page->ID) : home_url('/'); // Fallback to home_url
+
+        wp_localize_script(
+            'jacobo-dashboard-suggestions', // Script handle
+            'jacoboPluginData',             // JavaScript object name
+            array(
+                'campaign_planner_url' => $planner_url,
+                // 'nonce' => wp_create_nonce('wp_rest') // Example if you need a REST API nonce
+            )
+        );
+    }
+
     // Enqueue script for content calendar only on its specific template page
     if ( is_page_template('template-content-calendar.php') ) {
         wp_enqueue_script(
