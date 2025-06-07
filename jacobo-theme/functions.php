@@ -393,8 +393,6 @@ function jacobo_theme_rewrite_flush() {
 // Descomentar estas líneas temporalmente si los permalinks no funcionan tras añadir el CPT:
 // add_action( 'after_switch_theme', 'jacobo_theme_rewrite_flush' );
 // register_deactivation_hook( __FILE__, 'flush_rewrite_rules' ); // No usar __FILE__ aquí si el código está en functions.php, sino el path del plugin principal si fuera un plugin
-
-// Nota: Para `flush_rewrite_rules()` en un tema, es mejor hacerlo una vez.
 // Una forma común es guardando los Enlaces Permanentes en el admin de WP.
 // O en un hook de activación del tema. Para este ejercicio, el usuario puede simplemente
 // visitar Ajustes > Enlaces Permanentes en el admin de WP y hacer clic en "Guardar Cambios"
