@@ -195,6 +195,26 @@ function jacobo_theme_enqueue_theme_assets() {
         );
     }
 
+    // Enqueue script for pricing page only on its specific template page
+    if ( is_page_template('template-precios.php') ) {
+        wp_enqueue_script(
+            'jacobo-page-precios',
+            get_template_directory_uri() . '/js/page-precios.js',
+            array(), // No dependencies for this simple script
+            filemtime(get_template_directory() . '/js/page-precios.js'), // Versioning
+            true // Load in footer
+        );
+        wp_localize_script(
+            'jacobo-page-precios',      // El handle del script que acabas de encolar
+            'jacoboPreciosData',        // El nombre del objeto JavaScript que contendrá los datos
+            array(
+                'checkout_base_url' => home_url('/checkout/?add-to-cart='),
+                // Aquí podrías añadir otros datos si fueran necesarios en el futuro,
+                // por ejemplo, nonces si hicieras llamadas AJAX desde esta página.
+            )
+        );
+    }
+
     // Enqueue script for content calendar only on its specific template page
     if ( is_page_template('template-content-calendar.php') ) {
         wp_enqueue_script(
@@ -373,8 +393,6 @@ function jacobo_theme_rewrite_flush() {
 // Descomentar estas líneas temporalmente si los permalinks no funcionan tras añadir el CPT:
 // add_action( 'after_switch_theme', 'jacobo_theme_rewrite_flush' );
 // register_deactivation_hook( __FILE__, 'flush_rewrite_rules' ); // No usar __FILE__ aquí si el código está en functions.php, sino el path del plugin principal si fuera un plugin
-
-// Nota: Para `flush_rewrite_rules()` en un tema, es mejor hacerlo una vez. 
 // Una forma común es guardando los Enlaces Permanentes en el admin de WP.
 // O en un hook de activación del tema. Para este ejercicio, el usuario puede simplemente
 // visitar Ajustes > Enlaces Permanentes en el admin de WP y hacer clic en "Guardar Cambios"
