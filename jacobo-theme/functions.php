@@ -142,6 +142,15 @@ function jacobo_theme_enqueue_theme_assets() {
         true // Load in footer
     );
 
+    // Enqueue notifications script globally
+    wp_enqueue_script(
+        'jacobo-notifications',
+        get_template_directory_uri() . '/js/notifications.js',
+        array(),
+        filemtime(get_template_directory() . '/js/notifications.js'),
+        true
+    );
+
     // Enqueue general theme scripts if they exist and are needed on all pages
     // Example: navigation.js (ensure this file exists or remove this line)
     // wp_enqueue_script( 'jacobo-theme-navigation', get_template_directory_uri() . '/js/navigation.js', array(), '1.0.0', true );
@@ -399,3 +408,204 @@ function jacobo_theme_rewrite_flush() {
 // O en un hook de activación del tema. Para este ejercicio, el usuario puede simplemente
 // visitar Ajustes > Enlaces Permanentes en el admin de WP y hacer clic en "Guardar Cambios"
 // después de que este código se añada, para asegurar que los nuevos slugs de CPT funcionen.
+
+// Registrar Meta Box para los Detalles del Plan en el CPT "plan"
+function jacobo_add_plan_details_meta_box() {
+    add_meta_box(
+        'jacobo_plan_details', // ID único de la meta box
+        __( 'Detalles del Plan Jacobo', 'jacobo-theme' ), // Título de la meta box
+        'jacobo_render_plan_details_meta_box_callback', // Función callback para renderizar el contenido
+        'plan', // Custom Post Type donde se mostrará ('plan')
+        'normal', // Contexto donde se mostrará ('normal', 'side', 'advanced')
+        'high' // Prioridad ('high', 'core', 'default', 'low')
+    );
+}
+add_action( 'add_meta_boxes_plan', 'jacobo_add_plan_details_meta_box' ); // Usar add_meta_boxes_{post_type} para CPTs
+
+/**
+ * Callback para renderizar el contenido de la Meta Box "Detalles del Plan Jacobo".
+ * Esta función se desarrollará en el siguiente paso del plan.
+ * Por ahora, solo incluirá un placeholder.
+ */
+function jacobo_render_plan_details_meta_box_callback( $post ) {
+    // Añadir un nonce field para verificación al guardar
+    wp_nonce_field( 'jacobo_save_plan_details_nonce', 'jacobo_plan_details_nonce_field' );
+
+    // Estilos inline para la tabla y los campos para mejor organización visual en el admin
+    echo '<style>
+        .jacobo-meta-box-table th { text-align: left; padding-right: 10px; vertical-align: top; width: 200px; }
+        .jacobo-meta-box-table td { vertical-align: top; }
+        .jacobo-meta-box-table .description { font-size: 0.85em; color: #666; }
+    </style>';
+
+    echo '<table class="form-table jacobo-meta-box-table"><tbody>';
+
+    // --- Campo: Subtítulo del Plan ---
+    $subtitulo = get_post_meta( $post->ID, 'plan_subtitulo', true );
+    echo '<tr>';
+    echo '<th><label for="plan_subtitulo">' . __( 'Subtítulo del Plan', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="text" id="plan_subtitulo" name="plan_subtitulo" value="' . esc_attr( $subtitulo ) . '" class="widefat" />';
+    echo '<p class="description">' . __( 'Ej: "Ideal para empezar" o "Todas las funciones Pro". Se muestra debajo del título del plan.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: ID Producto WooCommerce Mensual ---
+    $id_mensual = get_post_meta( $post->ID, 'plan_id_producto_woo_mensual', true );
+    echo '<tr>';
+    echo '<th><label for="plan_id_producto_woo_mensual">' . __( 'ID Producto Woo (Mensual)', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="number" id="plan_id_producto_woo_mensual" name="plan_id_producto_woo_mensual" value="' . esc_attr( $id_mensual ) . '" class="small-text" />';
+    echo '<p class="description">' . __( 'ID numérico del producto de suscripción mensual en WooCommerce.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: Precio Mensual (Valor Numérico) ---
+    $precio_mensual = get_post_meta( $post->ID, 'plan_precio_mensual', true );
+    echo '<tr>';
+    echo '<th><label for="plan_precio_mensual">' . __( 'Precio Mensual (Valor Numérico)', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="number" step="any" id="plan_precio_mensual" name="plan_precio_mensual" value="' . esc_attr( $precio_mensual ) . '" class="small-text" />';
+    echo '<p class="description">' . __( 'Ej: 19990. Usado para cálculos y por el toggle. Se formatea en el frontend.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: ID Producto WooCommerce Anual ---
+    $id_anual = get_post_meta( $post->ID, 'plan_id_producto_woo_anual', true );
+    echo '<tr>';
+    echo '<th><label for="plan_id_producto_woo_anual">' . __( 'ID Producto Woo (Anual)', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="number" id="plan_id_producto_woo_anual" name="plan_id_producto_woo_anual" value="' . esc_attr( $id_anual ) . '" class="small-text" />';
+    echo '<p class="description">' . __( 'ID numérico del producto de suscripción anual en WooCommerce.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: Precio Anual (Valor Numérico) ---
+    $precio_anual = get_post_meta( $post->ID, 'plan_precio_anual', true );
+    echo '<tr>';
+    echo '<th><label for="plan_precio_anual">' . __( 'Precio Anual (Valor Numérico)', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="number" step="any" id="plan_precio_anual" name="plan_precio_anual" value="' . esc_attr( $precio_anual ) . '" class="small-text" />';
+    echo '<p class="description">' . __( 'Ej: 199900. Usado para cálculos y por el toggle. Se formatea en el frontend.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: Texto de Ahorro Anual ---
+    $texto_ahorro = get_post_meta( $post->ID, 'plan_texto_ahorro_anual', true );
+    echo '<tr>';
+    echo '<th><label for="plan_texto_ahorro_anual">' . __( 'Texto de Ahorro Anual', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="text" id="plan_texto_ahorro_anual" name="plan_texto_ahorro_anual" value="' . esc_attr( $texto_ahorro ) . '" class="widefat" />';
+    echo '<p class="description">' . __( 'Ej: "Ahorra 20%" o "2 meses gratis". Se muestra con el precio anual.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: Destacar este plan ---
+    $destacado = get_post_meta( $post->ID, 'plan_destacado', true );
+    echo '<tr>';
+    echo '<th><label for="plan_destacado">' . __( '¿Destacar este plan?', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="checkbox" id="plan_destacado" name="plan_destacado" value="si" ' . checked( $destacado, 'si', false ) . ' />';
+    echo '<span class="description">' . __( ' Marcar para destacar este plan (ej. "Más Popular").', 'jacobo-theme' ) . '</span></td>';
+    echo '</tr>';
+
+    // --- Campo: Lista de Funcionalidades ---
+    $funcionalidades = get_post_meta( $post->ID, 'plan_funcionalidades', true );
+    echo '<tr>';
+    echo '<th><label for="plan_funcionalidades">' . __( 'Lista de Funcionalidades', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><textarea id="plan_funcionalidades" name="plan_funcionalidades" class="widefat" rows="6">' . esc_textarea( $funcionalidades ) . '</textarea>';
+    echo '<p class="description">' . __( 'Una funcionalidad por línea. Se mostrarán como una lista en la página de precios.', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    // --- Campo: Texto del Botón CTA ---
+    $texto_boton = get_post_meta( $post->ID, 'plan_texto_boton', true );
+    echo '<tr>';
+    echo '<th><label for="plan_texto_boton">' . __( 'Texto del Botón CTA', 'jacobo-theme' ) . ':</label></th>';
+    echo '<td><input type="text" id="plan_texto_boton" name="plan_texto_boton" value="' . esc_attr( $texto_boton ) . '" class="widefat" />';
+    echo '<p class="description">' . __( 'Ej: "Suscribirme Ahora" o "Empezar con Pro". Si se deja vacío, se usará "Suscribirme Ahora".', 'jacobo-theme' ) . '</p></td>';
+    echo '</tr>';
+
+    echo '</tbody></table>';
+
+    // Ejemplo de cómo se recuperaría un valor (se usará en el siguiente paso)
+    // $subtitulo = get_post_meta( $post->ID, 'plan_subtitulo', true );
+    // echo '<label for="plan_subtitulo">Subtítulo:</label>';
+    // echo '<input type="text" id="plan_subtitulo" name="plan_subtitulo" value="' . esc_attr( $subtitulo ) . '" class="widefat" />';
+}
+
+/**
+ * Guarda los datos de la Meta Box "Detalles del Plan Jacobo" cuando se guarda el CPT "plan".
+ *
+ * @param int $post_id El ID del post que se está guardando.
+ */
+function jacobo_save_plan_details_meta_data( $post_id ) {
+
+    // 1. Verificar si nuestro nonce está presente.
+    if ( ! isset( $_POST['jacobo_plan_details_nonce_field'] ) ) {
+        return;
+    }
+
+    // 2. Verificar que el nonce sea válido.
+    if ( ! wp_verify_nonce( $_POST['jacobo_plan_details_nonce_field'], 'jacobo_save_plan_details_nonce' ) ) {
+        return;
+    }
+
+    // 3. Si es un autoguardado, no hacemos nada.
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+        return;
+    }
+
+    // 4. Verificar los permisos del usuario.
+    // Asumimos que el CPT 'plan' usa las capabilities de 'post'. Si se cambió a 'page', ajustar aquí.
+    if ( isset( $_POST['post_type'] ) && 'plan' == $_POST['post_type'] ) {
+        if ( ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
+        }
+    } else {
+        // Si no es nuestro CPT, no hacemos nada (aunque el hook save_post_plan ya debería filtrar esto)
+        return;
+    }
+
+    // 5. Todo bien, ahora guardamos los datos. Sanitizar cada campo.
+
+    // --- Campo: Subtítulo del Plan ---
+    if ( isset( $_POST['plan_subtitulo'] ) ) {
+        update_post_meta( $post_id, 'plan_subtitulo', sanitize_text_field( $_POST['plan_subtitulo'] ) );
+    }
+
+    // --- Campo: ID Producto WooCommerce Mensual ---
+    if ( isset( $_POST['plan_id_producto_woo_mensual'] ) ) {
+        update_post_meta( $post_id, 'plan_id_producto_woo_mensual', absint( $_POST['plan_id_producto_woo_mensual'] ) );
+    }
+
+    // --- Campo: Precio Mensual (Valor Numérico) ---
+    if ( isset( $_POST['plan_precio_mensual'] ) ) {
+        // Guardar como string después de sanitizar, para permitir decimales si es necesario.
+        // El input es type="number" step="any"
+        update_post_meta( $post_id, 'plan_precio_mensual', sanitize_text_field( wp_unslash( $_POST['plan_precio_mensual'] ) ) );
+    }
+
+    // --- Campo: ID Producto WooCommerce Anual ---
+    if ( isset( $_POST['plan_id_producto_woo_anual'] ) ) {
+        update_post_meta( $post_id, 'plan_id_producto_woo_anual', absint( $_POST['plan_id_producto_woo_anual'] ) );
+    }
+
+    // --- Campo: Precio Anual (Valor Numérico) ---
+    if ( isset( $_POST['plan_precio_anual'] ) ) {
+        update_post_meta( $post_id, 'plan_precio_anual', sanitize_text_field( wp_unslash( $_POST['plan_precio_anual'] ) ) );
+    }
+
+    // --- Campo: Texto de Ahorro Anual ---
+    if ( isset( $_POST['plan_texto_ahorro_anual'] ) ) {
+        update_post_meta( $post_id, 'plan_texto_ahorro_anual', sanitize_text_field( $_POST['plan_texto_ahorro_anual'] ) );
+    }
+
+    // --- Campo: Destacar este plan (Checkbox) ---
+    // Si el checkbox está marcado, $_POST['plan_destacado'] será 'si'. Si no, no estará en $_POST.
+    if ( isset( $_POST['plan_destacado'] ) && $_POST['plan_destacado'] === 'si' ) {
+        update_post_meta( $post_id, 'plan_destacado', 'si' );
+    } else {
+        update_post_meta( $post_id, 'plan_destacado', 'no' ); // O delete_post_meta($post_id, 'plan_destacado'); si prefieres
+    }
+
+    // --- Campo: Lista de Funcionalidades (Textarea) ---
+    if ( isset( $_POST['plan_funcionalidades'] ) ) {
+        // Usar sanitize_textarea_field para textareas que pueden tener saltos de línea.
+        // wp_kses_post podría ser una opción si se quiere permitir algo de HTML seguro, pero para una lista simple, textarea es mejor.
+        update_post_meta( $post_id, 'plan_funcionalidades', sanitize_textarea_field( $_POST['plan_funcionalidades'] ) );
+    }
+
+    // --- Campo: Texto del Botón CTA ---
+    if ( isset( $_POST['plan_texto_boton'] ) ) {
+        update_post_meta( $post_id, 'plan_texto_boton', sanitize_text_field( $_POST['plan_texto_boton'] ) );
+    }
+}
+// Activar el hook para el CPT 'plan'
+add_action( 'save_post_plan', 'jacobo_save_plan_details_meta_data' );

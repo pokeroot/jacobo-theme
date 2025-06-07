@@ -48,6 +48,7 @@ get_header();
                     // Obtener campos personalizados (ejemplos, el JS se encargará de la lógica del toggle)
                     $plan_id = get_the_ID();
                     $titulo_plan = get_the_title();
+                    $subtitulo_plan = get_post_meta( $plan_id, 'plan_subtitulo', true );
                     $precio_mensual = get_post_meta( $plan_id, 'plan_precio_mensual', true );
                     $id_producto_mensual = get_post_meta( $plan_id, 'plan_id_producto_woo_mensual', true );
                     $precio_anual = get_post_meta( $plan_id, 'plan_precio_anual', true );
@@ -67,6 +68,11 @@ get_header();
             <div class="pricing-plan-column flex flex-col bg-gray-800/30 backdrop-blur-md rounded-xl p-6 md:p-8 <?php echo esc_attr($destacado_class); ?>">
                 <?php echo $destacado_badge; ?>
                 <h3 class="font-sora text-2xl font-bold text-blancoPuro text-center mb-2"><?php echo esc_html($titulo_plan); ?></h3>
+                <?php if ( ! empty( $subtitulo_plan ) ) : ?>
+                    <p class="font-inter text-sm text-grisClaro text-center mb-4 -mt-1 px-2"><?php echo esc_html( $subtitulo_plan ); ?></p>
+                <?php else : ?>
+                    <div class="h-7 mb-4"></div> <?php // Placeholder para mantener altura si no hay subtítulo, ajusta h-7 si es necesario ?>
+                <?php endif; ?>
 
                 <div class="text-center mb-6 min-h-[80px]"> <?php // min-h para alinear botones si los precios/ahorro cambian altura ?>
                     <span class="plan-price font-sora text-4xl md:text-5xl font-bold text-blancoPuro"

@@ -43,3 +43,99 @@
     100% { background-position: 0% 50%; }
   }
 }
+
+/* Estilos para Notificaciones Toast */
+@layer components {
+  /* Estilos para el Contenedor de Toasts */
+  #jacobo-toast-container {
+    @apply fixed top-5 right-5 z-[9999] w-full max-w-xs space-y-3;
+    /* z-[9999] para asegurar que esté por encima de la mayoría de los elementos */
+  }
+
+  /* Estilos Base para un Toast Individual */
+  .jacobo-toast {
+    @apply bg-gray-800 text-grisClaro rounded-lg shadow-2xl overflow-hidden border-l-4 transition-all duration-500 ease-in-out flex items-start p-4;
+    opacity: 0;
+    transform: translateX(100%); /* Empieza fuera de la pantalla a la derecha */
+    /* border-l-4 es el acento de color, se sobreescribirá por tipo */
+  }
+
+  .jacobo-toast-visible {
+    opacity: 1;
+    transform: translateX(0); /* Entra a la pantalla */
+  }
+
+  /* Contenedor del Icono */
+  .jacobo-toast .toast-icon-container {
+    @apply flex-shrink-0 w-6 h-6 mr-3;
+    /* El SVG se insertará aquí y heredará el color del borde/texto del tipo */
+  }
+  .jacobo-toast .toast-icon-container svg {
+    @apply w-full h-full;
+  }
+
+  /* Contenido del Mensaje */
+  .jacobo-toast .toast-content {
+    @apply flex-grow;
+  }
+  .jacobo-toast .toast-message {
+    @apply text-sm font-inter;
+  }
+
+  /* Botón de Cierre */
+  .jacobo-toast .toast-close-btn {
+    @apply ml-auto -mr-1 -mt-1 p-1 text-gray-500 hover:text-blancoPuro rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-cianElectrico transition-colors;
+    /* -mr-1 -mt-1 para compensar el padding del toast y acercarlo a la esquina */
+  }
+  .jacobo-toast .toast-close-btn svg { /* Si usas un SVG para el botón de cierre */
+    @apply w-4 h-4;
+  }
+
+
+  /* Estilos Específicos por Tipo de Toast */
+
+  /* Éxito */
+  .jacobo-toast-success {
+    @apply border-green-500; /* Acento verde brillante */
+  }
+  .jacobo-toast-success .toast-icon-container {
+    @apply text-green-500;
+  }
+
+  /* Error */
+  .jacobo-toast-error {
+    @apply border-red-500; /* Acento rojo intenso */
+  }
+  .jacobo-toast-error .toast-icon-container {
+    @apply text-red-500;
+  }
+  /* Para errores, podrías querer que el texto también sea rojo o más destacado */
+  /* .jacobo-toast-error .toast-message { @apply text-red-300; } */
+
+
+  /* Advertencia */
+  .jacobo-toast-warning {
+    @apply border-amber-500; /* Acento ámbar/amarillo */
+  }
+  .jacobo-toast-warning .toast-icon-container {
+    @apply text-amber-500;
+  }
+
+  /* Informativo */
+  .jacobo-toast-info {
+    @apply border-cianElectrico; /* Acento azul eléctrico (del gradiente) */
+  }
+  .jacobo-toast-info .toast-icon-container {
+    @apply text-cianElectrico;
+  }
+
+  /* Ajustes para Responsividad (Opcional, si se necesita) */
+  @media (max-width: 640px) { /* sm breakpoint de Tailwind */
+    #jacobo-toast-container {
+      @apply top-3 right-3 left-3 max-w-full; /* Ocupa más ancho en móviles */
+    }
+    .jacobo-toast {
+      /* Podrías querer que los toasts sean un poco más grandes o diferentes en móvil */
+    }
+  }
+}

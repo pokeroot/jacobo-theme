@@ -121,18 +121,19 @@ document.addEventListener('DOMContentLoaded', function() {
             button.addEventListener('click', function() {
                 const textToCopy = this.dataset.copyText;
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    const originalText = this.textContent;
-                    this.textContent = '¡Copiado!';
-                    this.classList.add('bg-green-500', 'hover:bg-green-600'); // Clases temporales de éxito
-                    this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-                    setTimeout(() => {
-                        this.textContent = originalText;
-                        this.classList.remove('bg-green-500', 'hover:bg-green-600');
-                        this.classList.add('bg-gray-700', 'hover:bg-gray-600');
-                    }, 2000);
+                    // const originalText = this.textContent; // El texto del botón no cambia permanentemente
+                    // this.textContent = '¡Copiado!';
+                    // this.classList.add('bg-green-500', 'hover:bg-green-600');
+                    // this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    window.jacoboShowToast('¡Contenido copiado al portapapeles!', 'success', 3000);
+                    // setTimeout(() => {
+                    //     this.textContent = originalText;
+                    //     this.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    //     this.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    // }, 2000);
                 }).catch(err => {
                     console.error('Error al copiar texto: ', err);
-                    // Considerar mostrar un mensaje de error al usuario
+                    window.jacoboShowToast('Error al copiar el contenido.', 'error', 5000);
                 });
             });
         });
@@ -208,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .catch(error => {
                         console.error('Error al buscar productos:', error);
+                        window.jacoboShowToast('Error al buscar productos. Inténtalo de nuevo.', 'error', 0);
                         productSearchResultsDiv.innerHTML = '<p class="text-sm text-red-400">Error al buscar productos. Inténtalo de nuevo.</p>';
                     });
                 }, 500); // Debounce para no hacer llamadas en cada tecleo
@@ -338,12 +340,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         generatedContent.appendChild(card);
                     });
                     addCopyButtonListeners();
+                    window.jacoboShowToast('¡Campaña generada con éxito!', 'success');
                 } else {
                     generatedContent.innerHTML = '<p class="text-lg text-center text-grisClaro">No se generó contenido o la respuesta no tiene el formato esperado.</p>';
+                    window.jacoboShowToast('Se generó la campaña pero no se recibió contenido en el formato esperado.', 'warning', 7000);
                 }
             })
             .catch(error => {
                 console.error('Error al generar contenido:', error);
+                window.jacoboShowToast('Error al generar contenido: ' + error.message, 'error', 0);
                 loadingAnimation.classList.add('hidden');
                 resultsArea.classList.remove('hidden');
                 generatedContent.innerHTML = `<div class="bg-red-800/30 p-6 rounded-xl border border-red-700/50 text-center"><p class="font-sora text-xl text-red-300 mb-3">¡Oops! Algo salió mal</p><p class="text-red-400">${escapeHTML(error.message)}</p></div>`;

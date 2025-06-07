@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error al cargar las sugerencias:', error);
+            if (typeof window.jacoboShowToast === 'function') {
+                window.jacoboShowToast('Error al cargar las sugerencias: ' + error.message, 'error', 0);
+            }
             if (loadingState) loadingState.style.display = 'none';
             if (suggestionsContainer) {
                 suggestionsContainer.innerHTML = `<div class="col-span-full bg-red-800/30 p-6 rounded-xl border border-red-700/50 text-center"><p class="font-sora text-xl text-red-300 mb-3">¡Oops! No se pudieron cargar las sugerencias</p><p class="text-red-400">${escapeHTML(error.message) || 'Inténtalo de nuevo más tarde.'}</p></div>`;
