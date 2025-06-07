@@ -4,79 +4,94 @@ document.addEventListener('DOMContentLoaded', function() {
     const suggestionsContainer = document.getElementById('jacoboSuggestionsContainer');
     const loadingState = document.getElementById('suggestionsLoadingState');
 
-    // Endpoint para las sugerencias (debe ser pasado desde PHP si es necesario, o hardcodeado si es fijo)
-    // const suggestionsEndpoint = '/wp-json/jacobo/v1/sugerencias';
-    // Por ahora, usaremos datos de ejemplo ya que el endpoint real no está implementado por nosotros.
+    function escapeHTML(unsafe) {
+        if (typeof unsafe !== 'string') return '';
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
 
     if (suggestionsContainer && loadingState) {
-        // Simular carga de datos después de un breve retraso
-        setTimeout(() => {
-            loadSuggestions();
-        }, 1500);
+        loadSuggestions(); // Cargar directamente
     }
 
     function loadSuggestions() {
         if (!suggestionsContainer || !loadingState) return;
 
-        // Datos de ejemplo (simulando respuesta de la API GET /jacobo/v1/sugerencias)
-        const exampleSuggestions = [
-            {
-                id: 'sug1',
-                title: 'Campaña Flash: ¡Descuentos de Verano!',
-                description: 'Promociona tus productos más vendidos del verano con un descuento especial por tiempo limitado.',
-                campaignType: 'oferta_flash',
-                // productId: null // Opcional, si la oferta no es para un producto específico
-            },
-            {
-                id: 'sug2',
-                title: 'Lanzamiento Exclusivo: Nuevo Producto Estrella',
-                description: 'Genera expectación y ventas para el nuevo [Nombre Producto Ejemplo].',
-                campaignType: 'lanzamiento_producto',
-                productId: 'prod_xyz_example', // ID de ejemplo
-                productName: 'Producto Estrella Ejemplo' // Nombre para mostrar
-            },
-            {
-                id: 'sug3',
-                title: 'Contenido Semanal: Tips para Mascotas Felices',
-                description: 'Publica un post individual cada semana con consejos útiles para dueños de mascotas.',
-                campaignType: 'post_individual'
-            }
-        ];
+        // Asegurarse que el loader esté visible antes de la llamada.
+        // Si el loader está visible por defecto en HTML, esta línea no es estrictamente necesaria aquí.
+        loadingState.style.display = 'block';
 
-        renderSuggestions(exampleSuggestions);
+        const endpointUrl = '/wp-json/jacobo/v1/sugerencias';
+
+        let headers = {
+            'Content-Type': 'application/json',
+        };
+        // Incluir Nonce si está disponible y es necesario para el endpoint
+        // if (typeof jacoboPluginData !== 'undefined' && jacoboPluginData.nonce) {
+        //     headers['X-WP-Nonce'] = jacoboPluginData.nonce;
+        // }
+
+        fetch(endpointUrl, {
+            method: 'GET',
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().catch(() => {
+                    throw new Error('Error de red o del servidor: ' + response.status + ' ' + response.statusText);
+                }).then(errorData => {
+                    throw new Error(errorData.message || 'Error al cargar sugerencias. Código: ' + response.status);
+                });
+            }
+            return response.json();
+        })
+        .then(suggestions => {
+            renderSuggestions(suggestions);
+        })
+        .catch(error => {
+            console.error('Error al cargar las sugerencias:', error);
+            if (loadingState) loadingState.style.display = 'none';
+            if (suggestionsContainer) {
+                suggestionsContainer.innerHTML = `<div class="col-span-full bg-red-800/30 p-6 rounded-xl border border-red-700/50 text-center"><p class="font-sora text-xl text-red-300 mb-3">¡Oops! No se pudieron cargar las sugerencias</p><p class="text-red-400">${escapeHTML(error.message) || 'Inténtalo de nuevo más tarde.'}</p></div>`;
+            }
+        });
     }
 
     function renderSuggestions(suggestions) {
         if (!suggestionsContainer || !loadingState) return;
 
-        loadingState.style.display = 'none'; // Ocultar estado de carga
-        suggestionsContainer.innerHTML = ''; // Limpiar cualquier contenido previo (como el loader mismo)
+        loadingState.style.display = 'none';
+        suggestionsContainer.innerHTML = '';
 
-        if (suggestions.length === 0) {
-            suggestionsContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">No hay nuevas sugerencias por el momento. ¡Vuelve pronto!</p>';
+        if (!suggestions || suggestions.length === 0) {
+            suggestionsContainer.innerHTML = '<p class="col-span-full text-center text-grisClaro">No hay nuevas sugerencias por el momento. ¡Vuelve pronto!</p>';
             return;
         }
 
         suggestions.forEach(suggestion => {
             const card = document.createElement('div');
-            card.className = 'bg-gray-50 p-5 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 ease-in-out flex flex-col justify-between';
+            card.className = 'bg-gray-800/30 backdrop-blur-md rounded-xl p-6 shadow-xl border border-gray-700/50 hover:border-cianElectrico/50 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between';
 
             let productInfoHTML = '';
             if (suggestion.campaignType === 'lanzamiento_producto' && suggestion.productName) {
-                productInfoHTML = `<p class="text-sm text-indigo-600 font-semibold mt-1">Producto: ${suggestion.productName}</p>`;
+                productInfoHTML = `<p class="text-xs text-cianElectrico font-medium mt-2">Producto: ${escapeHTML(suggestion.productName)}</p>`;
             }
 
             card.innerHTML = `
                 <div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">${suggestion.title}</h3>
-                    <p class="text-sm text-gray-600 mb-3">${suggestion.description}</p>
+                    <h3 class="text-lg font-sora font-bold text-blancoPuro mb-2">${escapeHTML(suggestion.title)}</h3>
+                    <p class="text-sm text-grisClaro mb-4">${escapeHTML(suggestion.description)}</p>
                     ${productInfoHTML}
                 </div>
                 <button data-suggestion-id="${suggestion.id}"
                         data-campaign-type="${suggestion.campaignType}"
                         ${suggestion.productId ? `data-product-id="${suggestion.productId}"` : ''}
-                        ${suggestion.productName ? `data-product-name="${suggestion.productName}"` : ''}
-                        class="create-campaign-btn mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors duration-150 text-sm w-full">
+                        ${suggestion.productName ? `data-product-name="${escapeHTML(suggestion.productName)}"` : ''}
+                        class="create-campaign-btn mt-6 w-full text-center font-inter text-blancoPuro text-sm font-semibold px-6 py-2.5 rounded-lg bg-gradient-to-r from-cianElectrico to-violetaNeon hover:from-violetaNeon hover:to-cianElectrico transition-all duration-300 ease-in-out transform hover:scale-105 shadow-md hover:shadow-violetaNeon/30">
                     Crear esta Campaña
                 </button>
             `;

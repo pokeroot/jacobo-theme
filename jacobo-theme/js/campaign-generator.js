@@ -17,8 +17,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedProductIdInput = document.getElementById('selected_product_id');
     const defaultProductSearchHTML = productSearchResultsDiv ? productSearchResultsDiv.innerHTML : '<p class="text-sm text-gray-500">Los resultados de la búsqueda aparecerán aquí.</p>';
 
+    // Leer parámetros de URL para prellenar
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillCampaignType = urlParams.get('campaignType');
+    const prefillProductId = urlParams.get('productId');
+    const prefillProductName = urlParams.get('productName');
+    // const prefillCampaignName = urlParams.get('campaignName'); // Ejemplo si se necesitara
+    // const campaignNameInput = document.getElementById('campaign_name');
 
-    // Lógica de visibilidad de campos dinámicos
+
+    // Lógica de visibilidad de campos dinámicos (se ejecuta primero, luego el prellenado)
     if (campaignTypeSelect && productSearchSection && originalProductSelectionSection) {
         campaignTypeSelect.addEventListener('change', function(event) {
             const selectedValue = event.target.value;
@@ -45,62 +53,171 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         // Disparar un evento change inicial para establecer el estado correcto al cargar la página
+        // Esto se hará después de intentar prellenar, para que el prellenado tenga efecto primero.
+        // campaignTypeSelect.dispatchEvent(new Event('change'));
+    }
+
+    // Lógica para prellenar los campos DESPUÉS de configurar el listener de 'change'
+    // pero ANTES de disparar el 'change' inicial si no hay prefill.
+    if (prefillCampaignType && campaignTypeSelect) {
+        campaignTypeSelect.value = prefillCampaignType;
+        // Disparar el evento 'change' para que se actualice la visibilidad de las secciones
+        const changeEvent = new Event('change', { bubbles: true });
+        campaignTypeSelect.dispatchEvent(changeEvent); // Esto es crucial
+    } else if (campaignTypeSelect) {
+        // Si no hay prefill, disparamos el change inicial aquí para configurar la UI por defecto.
         campaignTypeSelect.dispatchEvent(new Event('change'));
     }
 
-    // Funcionalidad de Búsqueda de Productos en Tiempo Real (Simulada)
+    if (prefillProductId && selectedProductIdInput) {
+        selectedProductIdInput.value = prefillProductId;
+    }
+
+    if (prefillProductName && productSearchInput) {
+        // Solo prellenar el nombre si el tipo de campaña es lanzamiento_producto
+        // y la sección de búsqueda de producto está visible (lo cual el 'change' anterior debería haber hecho)
+        if (campaignTypeSelect && campaignTypeSelect.value === 'lanzamiento_producto') {
+            productSearchInput.value = prefillProductName;
+            // Opcional: Si también hay un ID, podrías simular un estado de "producto ya cargado/encontrado"
+            // o incluso disparar una búsqueda si fuera necesario para obtener más detalles.
+            // Por ahora, solo prellenamos el input.
+        }
+    }
+
+    // if (prefillCampaignName && campaignNameInput) {
+    //    campaignNameInput.value = prefillCampaignName;
+    // }
+    // Opcional: Limpieza de URL (descomentar y probar si es necesario)
+    // if (urlParams.has('campaignType') || urlParams.has('productId') || urlParams.has('productName')) {
+    //    history.replaceState(null, '', window.location.pathname);
+    // }
+
+
+    // --- Helper Functions ---
+    function formatPrice(price) { // Ya existe, asegurarse que es la misma o consolidar
+        const priceNum = parseFloat(price);
+        if (isNaN(priceNum)) return price;
+        return '$' + priceNum.toLocaleString('es-CL'); // Formato chileno
+    }
+
+    function escapeHTML(unsafe) {
+        if (typeof unsafe !== 'string') return '';
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
+    function escapeAttribute(unsafe) {
+        if (typeof unsafe !== 'string') return '';
+        return unsafe.replace(/"/g, "&quot;");
+    }
+
+    function addCopyButtonListeners() {
+        const copyButtons = document.querySelectorAll('.copy-content-btn');
+        copyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const textToCopy = this.dataset.copyText;
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalText = this.textContent;
+                    this.textContent = '¡Copiado!';
+                    this.classList.add('bg-green-500', 'hover:bg-green-600'); // Clases temporales de éxito
+                    this.classList.remove('bg-gray-700', 'hover:bg-gray-600');
+                    setTimeout(() => {
+                        this.textContent = originalText;
+                        this.classList.remove('bg-green-500', 'hover:bg-green-600');
+                        this.classList.add('bg-gray-700', 'hover:bg-gray-600');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error al copiar texto: ', err);
+                    // Considerar mostrar un mensaje de error al usuario
+                });
+            });
+        });
+    }
+
+    // Funcionalidad de Búsqueda de Productos en Tiempo Real
     if (productSearchInput && productSearchResultsDiv && selectedProductIdInput) {
         let searchTimeout;
         productSearchInput.addEventListener('input', function(event) {
             const searchTerm = event.target.value.trim();
-            productSearchResultsDiv.innerHTML = defaultProductSearchHTML; // Resetear a placeholder o limpiar
-            selectedProductIdInput.value = ''; // Limpiar ID seleccionado si se cambia la búsqueda
+            // No limpiar productSearchResultsDiv aquí para evitar parpadeo del placeholder si el usuario borra rápido
+            // selectedProductIdInput.value = ''; // Limpiar ID solo cuando se inicia una nueva búsqueda con resultados
 
             if (searchTerm.length > 2) {
-                productSearchResultsDiv.innerHTML = '<p class="text-sm text-gray-500">Buscando...</p>';
+                productSearchResultsDiv.innerHTML = `
+                <div class="flex justify-center items-center py-3">
+                    <svg class="animate-spin h-5 w-5 text-cianElectrico" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="ml-2 text-xs text-grisClaro">Buscando...</p>
+                </div>`;
+                selectedProductIdInput.value = ''; // Limpiar ID al iniciar nueva búsqueda
 
-                clearTimeout(searchTimeout); // Cancelar timeout anterior si existe
+                clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
-                    // Simulación de respuesta de API
-                    const dummyProducts = [
-                        { id: 'prod_123', name: 'Collar Inteligente para Perros GPS Pro' },
-                        { id: 'prod_456', name: 'Cama Ortopédica Deluxe para Mascotas Grandes' },
-                        { id: 'prod_789', name: 'Fuente de Agua Fresca Silenciosa para Gatos' }
-                    ];
+                    const endpointUrl = `/wp-json/jacobo/v1/productos?search=${encodeURIComponent(searchTerm)}`;
 
-                    // Filtrar productos simulados (opcional, para hacer la simulación más real)
-                    const filteredProducts = dummyProducts.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                    fetch(endpointUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': jacoboCampaignGenerator.nonce
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Error de red o del servidor: ' + response.statusText);
+                        }
+                        return response.json();
+                    })
+                    .then(products => {
+                        productSearchResultsDiv.innerHTML = '';
+                        if (products && products.length > 0) {
+                            products.forEach(product => {
+                                const productDiv = document.createElement('div');
+                                productDiv.className = 'p-3 mb-2 rounded-md hover:bg-gray-700 cursor-pointer border border-gray-600 transition-colors';
 
-                    if (filteredProducts.length > 0) {
-                        productSearchResultsDiv.innerHTML = ''; // Limpiar "Buscando..."
-                        filteredProducts.forEach(product => {
-                            const productDiv = document.createElement('div');
-                            productDiv.classList.add('p-3', 'border', 'rounded-md', 'hover:bg-gray-100', 'cursor-pointer', 'text-sm');
-                            productDiv.textContent = product.name;
-                            productDiv.dataset.productId = product.id; // Guardar ID en dataset
+                                let productHTML = `<h4 class="font-semibold text-blancoPuro">${product.name}</h4>`;
+                                if (product.price) {
+                                    productHTML += `<p class="text-xs text-grisClaro">${formatPrice(product.price)}</p>`;
+                                }
+                                // Ejemplo si se quisiera añadir imagen:
+                                // if (product.image_url) {
+                                //    productHTML = `<img src="${product.image_url}" alt="${product.name}" class="w-10 h-10 mr-3 rounded float-left">${productHTML}`;
+                                // }
+                                productDiv.innerHTML = productHTML;
+                                productDiv.dataset.productId = product.id;
+                                productDiv.dataset.productName = product.name;
 
-                            productDiv.addEventListener('click', function() {
-                                selectedProductIdInput.value = this.dataset.productId;
-                                productSearchInput.value = this.textContent; // Poner nombre en input
-
-                                // Resaltar seleccionado (simple)
-                                Array.from(productSearchResultsDiv.children).forEach(child => {
-                                    child.classList.remove('bg-indigo-100', 'font-semibold');
+                                productDiv.addEventListener('click', function() {
+                                    selectedProductIdInput.value = this.dataset.productId;
+                                    productSearchInput.value = this.dataset.productName;
+                                    productSearchResultsDiv.innerHTML = ''; // Limpiar resultados
+                                    productSearchInput.classList.add('border-cianElectrico');
+                                    setTimeout(() => productSearchInput.classList.remove('border-cianElectrico'), 2000);
                                 });
-                                this.classList.add('bg-indigo-100', 'font-semibold');
-
-                                // Opcional: Limpiar/ocultar otros resultados después de seleccionar
-                                // productSearchResultsDiv.innerHTML = ''; // O podría mantenerse la lista
-                                console.log('Producto seleccionado:', this.dataset.productId, this.textContent);
+                                productSearchResultsDiv.appendChild(productDiv);
                             });
-                            productSearchResultsDiv.appendChild(productDiv);
-                        });
-                    } else {
-                        productSearchResultsDiv.innerHTML = '<p class="text-sm text-gray-500">No se encontraron productos para "' + searchTerm + '".</p>';
-                    }
-                }, 1000); // Simular 1 segundo de retraso de red
+                        } else {
+                            productSearchResultsDiv.innerHTML = '<p class="text-sm text-grisClaro">No se encontraron productos.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al buscar productos:', error);
+                        productSearchResultsDiv.innerHTML = '<p class="text-sm text-red-400">Error al buscar productos. Inténtalo de nuevo.</p>';
+                    });
+                }, 500); // Debounce para no hacer llamadas en cada tecleo
             } else if (searchTerm.length === 0) {
-                 productSearchResultsDiv.innerHTML = defaultProductSearchHTML; // Mostrar placeholder original
+                 productSearchResultsDiv.innerHTML = defaultProductSearchHTML;
+                 selectedProductIdInput.value = ''; // Limpiar ID si el campo está vacío
+            } else {
+                // Opcional: Mensaje si el término es demasiado corto (menos de 3 caracteres)
+                productSearchResultsDiv.innerHTML = '<p class="text-sm text-grisClaro">Escribe al menos 3 caracteres para buscar.</p>';
+                selectedProductIdInput.value = '';
             }
         });
     }
@@ -174,45 +291,70 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Nonce:', jacoboCampaignGenerator.nonce);
             console.log('Acción:', jacoboCampaignGenerator.generate_content_action);
             console.log('Datos del formulario:', formObject);
-            // Aquí iría la llamada fetch() o $.ajax()
 
-            // Mantener la simulación visual con setTimeout por ahora
-            setTimeout(() => {
+            const endpointUrl = '/wp-json/jacobo/v1/generar-contenido';
+
+            fetch(endpointUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': jacoboCampaignGenerator.nonce
+                },
+                body: JSON.stringify(formObject)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error('Error de red o del servidor: ' + response.status + ' ' + response.statusText);
+                    }).then(errorData => {
+                        throw new Error(errorData.message || 'Error al generar contenido. Código: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
                 loadingAnimation.classList.add('hidden');
                 resultsArea.classList.remove('hidden');
+                generatedContent.innerHTML = '';
 
-                // Adaptación de visualización de resultados
-                let campaignNameForResult = formObject.campaign_name || 'tu nueva campaña';
-                let productInfo = '';
-                if (formObject.productId) {
-                    productInfo = ` para el producto ID: ${formObject.productId}`;
+                if (data && data.campaign_pieces && data.campaign_pieces.length > 0) {
+                    if (data.campaign_title) {
+                        const resultsTitleElement = resultsArea.querySelector('h2');
+                        if (resultsTitleElement) {
+                            resultsTitleElement.innerHTML = `🚀 ¡Tu Campaña "${escapeHTML(data.campaign_title)}" está Lista! 🚀`;
+                        }
+                    }
+
+                    data.campaign_pieces.forEach(piece => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-gray-800/30 backdrop-blur-md rounded-xl p-6 shadow-xl border border-gray-700/50 mb-6';
+
+                        let cardHTML = `<h3 class="font-sora font-bold text-xl text-cianElectrico mb-3">${escapeHTML(piece.title)}</h3>`;
+                        // Usamos la clase prose de Tailwind para estilizar HTML generado. Asegúrate que `piece.content` es sanitizado en backend.
+                        cardHTML += `<div class="font-inter text-grisClaro leading-relaxed prose prose-sm max-w-none prose-invert">${(piece.content)}</div>`;
+                        cardHTML += `<button class="mt-4 text-sm bg-gray-700 hover:bg-gray-600 text-grisClaro font-semibold py-2 px-4 rounded-md transition-colors duration-150 copy-content-btn" data-copy-text="${escapeAttribute(piece.content)}">Copiar Contenido</button>`;
+
+                        card.innerHTML = cardHTML;
+                        generatedContent.appendChild(card);
+                    });
+                    addCopyButtonListeners();
+                } else {
+                    generatedContent.innerHTML = '<p class="text-lg text-center text-grisClaro">No se generó contenido o la respuesta no tiene el formato esperado.</p>';
                 }
-
-                generatedContent.innerHTML = `
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="font-bold text-lg text-indigo-600 mb-2">Contenido Parte 1: Post Principal (${campaignNameForResult})</h3>
-                        <p class="text-gray-700">Este es el texto para el post principal de tu campaña "${campaignNameForResult}"${productInfo}. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                        <button class="mt-3 text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors duration-150">Copiar Texto</button>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                        <h3 class="font-bold text-lg text-indigo-600 mb-2">Contenido Parte 2: Email Promocional</h3>
-                        <p class="text-gray-700">Asunto: ¡No te pierdas ${campaignNameForResult}! <br>Este es el borrador para el email promocional de tu campaña. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-                        <button class="mt-3 text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors duration-150">Copiar Email</button>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="font-bold text-lg text-indigo-600 mb-2">Contenido Parte 3: Anuncio Corto para Redes</h3>
-                        <p class="text-gray-700">Idea para un anuncio corto: "${campaignNameForResult} - ¡Ya disponible!"${productInfo}. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-                        <button class="mt-3 text-sm bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md transition-colors duration-150">Copiar Anuncio</button>
-                    </div>
-                `;
-
-                // Rehabilitar botón y mostrarlo de nuevo
+            })
+            .catch(error => {
+                console.error('Error al generar contenido:', error);
+                loadingAnimation.classList.add('hidden');
+                resultsArea.classList.remove('hidden');
+                generatedContent.innerHTML = `<div class="bg-red-800/30 p-6 rounded-xl border border-red-700/50 text-center"><p class="font-sora text-xl text-red-300 mb-3">¡Oops! Algo salió mal</p><p class="text-red-400">${escapeHTML(error.message)}</p></div>`;
+            })
+            .finally(() => {
                 generateMagicBtn.disabled = false;
                 generateMagicBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                 // Decidimos si el formulario debe volver a mostrar el botón o todo el formulario.
+                 // Por ahora, solo el botón para permitir al usuario ver los resultados o errores.
                 document.querySelector('#campaignForm > div:last-child').classList.remove('hidden');
-                // campaignForm.classList.remove('hidden'); // Mostrar formulario de nuevo si se ocultó
-
-            }, 3000); // Simular tiempo de carga de 3 segundos
+            });
         });
     }
 });
