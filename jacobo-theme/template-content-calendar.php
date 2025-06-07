@@ -5,7 +5,7 @@
  */
 get_header();
 ?>
-
+<main id="content" class="flex-grow pt-16 md:pt-20">
 <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">🗓️ Calendario de Contenidos</h1>
 
@@ -123,5 +123,5 @@ get_header();
 
     </div>
 </div>
-
+</main>
 <?php get_footer(); ?>
