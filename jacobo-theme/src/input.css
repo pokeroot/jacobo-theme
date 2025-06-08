@@ -138,4 +138,141 @@
       /* Podrías querer que los toasts sean un poco más grandes o diferentes en móvil */
     }
   }
+
+  /* Estilos para contenido genérico de página (usado en page.php -> content-page.php) */
+  .entry-title {
+    /* Ya estilizado en content-page.php con clases de utilidad,
+       pero podrías añadir más aquí si fuera necesario, ej. un borde inferior con gradiente. */
+    /* Por ejemplo, para una línea debajo del título: */
+    /* @apply pb-2 mb-6;
+    position: relative; */
+  }
+  /* .entry-title::after {
+    content: '';
+    @apply absolute bottom-0 left-0 h-0.5 w-1/4 bg-gradient-to-r from-cianElectrico to-violetaNeon;
+  } */
+
+
+  /* Estilos base para contenido generado por the_content() usando Tailwind Typography (@tailwindcss/typography) */
+  /* Las clases 'prose prose-invert' en content-page.php ya hacen mucho de esto. */
+  /* Aquí puedes sobreescribir o añadir estilos específicos si 'prose' no es suficiente. */
+  .entry-content p {
+    /* 'prose' ya define márgenes y colores. Si necesitas override: */
+    /* @apply text-grisClaro mb-6 leading-relaxed; */
+  }
+  .entry-content ul, .entry-content ol {
+    /* @apply text-grisClaro list-inside mb-6; */
+  }
+  .entry-content li {
+    /* @apply mb-2; */
+  }
+  .entry-content a {
+    /* 'prose' ya estila enlaces. Para override: */
+    /* @apply text-cianElectrico hover:text-violetaNeon hover:underline; */
+  }
+  .entry-content strong {
+      /* @apply text-blancoPuro; */
+  }
+  .entry-content h2, .entry-content h3, .entry-content h4 { /* Títulos dentro del contenido */
+      /* @apply font-sora text-blancoPuro mt-8 mb-4; */
+  }
+
+
+  /* Estilos para Formularios de WooCommerce (y otros formularios genéricos si es posible) */
+  /* Estos son selectores generales. Podrían necesitar más especificidad o ajustes. */
+
+  .woocommerce form .form-row label,
+  form label { /* Label general de formulario */
+    @apply block font-inter text-sm font-medium text-grisClaro mb-1;
+  }
+
+  .woocommerce form .form-row input.input-text,
+  .woocommerce form .form-row textarea,
+  .woocommerce form .form-row select,
+  .woocommerce form .form-row .select2-container .select2-selection, /* Para Select2 de Woo */
+  form input[type="text"], /* Input general */
+  form input[type="email"],
+  form input[type="password"],
+  form input[type="number"],
+  form input[type="tel"],
+  form input[type="url"],
+  form textarea,
+  form select {
+    @apply bg-gray-700/50 text-blancoPuro border border-gray-600 placeholder-gray-400 rounded-md shadow-sm;
+    @apply focus:border-cianElectrico focus:ring-cianElectrico focus:ring-1 focus:outline-none;
+    @apply w-full p-3 text-sm; /* Ajustar padding y text-sm según necesidad */
+    @apply mt-1 mb-3; /* Espaciado base */
+  }
+
+  .woocommerce form .form-row textarea {
+      @apply min-h-[120px]; /* Altura mínima para textareas */
+  }
+
+  /* Específico para Select2 de WooCommerce (común en checkout) */
+  .woocommerce .select2-container--default .select2-selection--single {
+      @apply bg-gray-700/50 border-gray-600 text-blancoPuro h-auto; /* h-auto para que tome el padding p-3 */
+  }
+  .woocommerce .select2-container--default .select2-selection--single .select2-selection__rendered {
+      @apply text-blancoPuro p-0 leading-normal; /* p-0 porque el padding está en el input general, ajustar line-height */
+  }
+  .woocommerce .select2-container--default .select2-selection--single .select2-selection__arrow b {
+      @apply border-t-grisClaro; /* Color de la flecha */
+  }
+  /* Cuando el select2 está abierto */
+  .select2-container--open .select2-dropdown {
+      @apply bg-gray-700 border-gray-600;
+  }
+  .select2-results__option {
+      @apply text-grisClaro;
+  }
+  .select2-results__option--highlighted {
+    @apply bg-cianElectrico text-azulNoche;
+  }
+  .select2-search__field { /* Campo de búsqueda dentro de select2 */
+      @apply bg-gray-600 text-blancoPuro placeholder-gray-400;
+  }
+
+
+  /* Botones de WooCommerce y otros botones primarios en formularios */
+  .woocommerce button[type="submit"],
+  .woocommerce button.button,
+  .woocommerce input[type="submit"],
+  form button[type="submit"], /* Botón de submit general */
+  form .button-primary {
+    @apply w-full sm:w-auto font-inter text-blancoPuro text-base font-semibold px-8 py-3 rounded-lg;
+    @apply bg-gradient-to-r from-cianElectrico to-violetaNeon;
+    @apply hover:from-violetaNeon hover:to-cianElectrico;
+    @apply transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-violetaNeon/30;
+    @apply border-none disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .woocommerce button[type="submit"]:active,
+  .woocommerce button.button:active,
+  .woocommerce input[type="submit"]:active,
+  form button[type="submit"]:active,
+  form .button-primary:active {
+      @apply transform scale-100;
+  }
+
+  /* Ajustes específicos para el checkout de WooCommerce */
+  .woocommerce-checkout #payment ul.payment_methods {
+      @apply border-gray-700 bg-gray-800/20 rounded-md;
+  }
+  .woocommerce-checkout #payment div.payment_box {
+      @apply bg-cianElectrico/10 text-grisClaro;
+  }
+  .woocommerce-checkout #payment div.payment_box::before {
+      @apply border-b-cianElectrico/20; /* Ajustar color del triángulo */
+  }
+  .woocommerce-checkout table.shop_table th,
+  .woocommerce-checkout table.shop_table td {
+      @apply border-gray-700/50;
+  }
+
+  /* Para asegurar que los mensajes de WooCommerce también sean visibles */
+  .woocommerce-message, .woocommerce-info, .woocommerce-error, .woocommerce-noreviews, ul.woocommerce-error li {
+      @apply border-l-4 rounded-md mb-6 p-4 shadow-lg text-blancoPuro;
+  }
+  .woocommerce-message { @apply bg-green-800/40 border-green-500; }
+  .woocommerce-info { @apply bg-blue-800/40 border-blue-500; } /* Usar un azul diferente al cian para info general de Woo */
+  .woocommerce-error, ul.woocommerce-error li { @apply bg-red-800/40 border-red-500; }
 }
