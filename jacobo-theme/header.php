@@ -25,7 +25,7 @@
 
         <!-- Botones Derecha -->
         <div class="flex items-center space-x-4">
-            <a href="#" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Iniciar Sesión</a>
+            <a href="/login" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Iniciar Sesión</a>
             <a href="/precios"
                class="font-inter text-blancoPuro text-sm font-semibold px-6 py-2 rounded-md
                       bg-gradient-to-r from-cianElectrico to-violetaNeon
