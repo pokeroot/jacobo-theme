@@ -609,3 +609,145 @@ function jacobo_save_plan_details_meta_data( $post_id ) {
 }
 // Activar el hook para el CPT 'plan'
 add_action( 'save_post_plan', 'jacobo_save_plan_details_meta_data' );
+
+// --- Personalización de Emails ---
+
+/**
+ * Devuelve el HTML de la plantilla base para los emails de Jacobo.
+ * @param string $content El contenido principal del email.
+ * @param string $title El título opcional para el header del email.
+ * @return string El HTML completo del email.
+ */
+function jacobo_get_email_template_html( $content, $title = '' ) {
+    $site_url = home_url();
+    $theme_name = get_bloginfo( 'name' ); // O 'Jacobo' directamente
+    $current_year = date( 'Y' );
+
+    // Estilos inline básicos (la compatibilidad varía mucho entre clientes de email)
+    $body_style = "margin:0; padding:0; background-color:#0A0C1F; font-family: Inter, Arial, sans-serif; color:#E0E0E0; line-height: 1.6;";
+    $container_style = "width:100%; max-width:600px; margin:0 auto; padding:20px; background-color:#1E293B; border-radius: 8px;"; // Un gris azulado oscuro para el contenedor
+    $header_style = "padding-bottom:20px; border-bottom:1px solid #334155; text-align:center;";
+    $logo_style = "font-family: Sora, Arial, sans-serif; color:#FFFFFF; font-size:28px; font-weight:bold; text-decoration:none;";
+    $content_style = "padding:20px 0;";
+    $footer_style = "padding-top:20px; border-top:1px solid #334155; text-align:center; font-size:12px; color:#94A3B8;"; // Un gris más claro para el footer
+    $button_style = "background-color:#00F6FF; border-radius:5px; color:#0A0C1F; display:inline-block; padding:10px 20px; text-decoration:none; font-weight:bold; font-family: Inter, Arial, sans-serif;";
+    // El gradiente en botones es muy difícil de lograr consistentemente en emails, se usa color sólido de acento.
+
+    $email_title_html = $title ? '<h1 style="font-family: Sora, Arial, sans-serif; color:#FFFFFF; font-size:24px; margin-bottom:15px;">' . esc_html($title) . '</h1>' : '';
+
+    $html = <<<EOD
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-B">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>__EMAIL_TITLE_PLACEHOLDER__</title> <?php // El título real lo pone el cliente de email ?>
+    <style type="text/css">
+        /* Estilos adicionales que algunos clientes podrían respetar (Gmail los usa) */
+        body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        table { border-collapse: collapse !important; }
+        body { height: 100% !important; margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        a[x-apple-data-detectors] {
+            color: inherit !important;
+            text-decoration: none !important;
+            font-size: inherit !important;
+            font-family: inherit !important;
+            font-weight: inherit !important;
+            line-height: inherit !important;
+        }
+        /* Estilos para modo oscuro en clientes que lo soportan (beta) */
+        @media (prefers-color-scheme: dark) {
+            body { background-color: #0A0C1F !important; }
+            .email-container { background-color: #1E293B !important; }
+            .email-header h1, .email-content h1, .email-content h2, .email-content h3, .email-content p, .email-content li, .email-content span, .email-content a:not(.button) { color: #E0E0E0 !important; }
+            .email-footer p, .email-footer a { color: #94A3B8 !important; }
+        }
+    </style>
+</head>
+<body style="{$body_style}">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table border="0" cellpadding="0" cellspacing="0" style="{$container_style}" class="email-container">
+                    <tr>
+                        <td align="center" style="{$header_style}" class="email-header">
+                            <a href="{$site_url}" style="{$logo_style}">Jacobo</a>
+                            {$email_title_html}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="{$content_style}" class="email-content">
+                            {$content}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="{$footer_style}" class="email-footer">
+                            <p>&copy; {$current_year} {$theme_name}. Todos los derechos reservados.</p>
+                            <p>
+                                <a href="{$site_url}/link-a-red-social-1" style="color:#94A3B8; text-decoration:underline;">Facebook</a> |
+                                <a href="{$site_url}/link-a-red-social-2" style="color:#94A3B8; text-decoration:underline;">Twitter</a> |
+                                <a href="{$site_url}/link-a-red-social-3" style="color:#94A3B8; text-decoration:underline;">LinkedIn</a>
+                            </p>
+                            <?php // El enlace para darse de baja es más relevante para emails de marketing, no transaccionales de WP/Woo por defecto ?>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+EOD;
+    // Reemplazar placeholder de botón si existe en el contenido (ejemplo)
+    // Esto es una forma simple, se podrían usar funciones más robustas para placeholders
+    $html = str_replace(
+        '[jacobo_email_button text="',
+        '<p style="text-align:center; margin-top:20px; margin-bottom:20px;"><a href="#" class="button" style="' . $button_style . '">',
+        $html
+    );
+    $html = str_replace('"]', '</a></p>', $html);
+
+    return $html;
+}
+
+// Cambiar nombre del remitente para emails de WP
+add_filter( 'wp_mail_from_name', function( $original_email_from ) {
+    return 'Jacobo'; // Nombre de tu plataforma
+});
+
+// Cambiar email del remitente para emails de WP
+add_filter( 'wp_mail_from', function( $original_email_address ) {
+    $domain = wp_parse_url( home_url(), PHP_URL_HOST );
+    return 'noreply@' . $domain; // Ej: noreply@tudominio.com
+});
+
+// Personalizar el mensaje de email de recuperación de contraseña de WP
+if ( !function_exists('jacobo_retrieve_password_message') ) {
+    function jacobo_retrieve_password_message( $message, $key, $user_login, $user_data ) {
+        $site_name = get_bloginfo( 'name' );
+        $reset_link = network_site_url( "wp-login.php?action=rp&key=$key&login=" . rawurlencode( $user_login ), 'login' );
+
+        $email_content = "<p style='margin-bottom:15px;'>Alguien ha solicitado un reseteo de contraseña para la siguiente cuenta en {$site_name}:</p>";
+        $email_content .= "<p style='margin-bottom:15px;'>Nombre de usuario: <strong>" . esc_html( $user_login ) . "</strong></p>";
+        $email_content .= "<p style='margin-bottom:15px;'>Si esto fue un error, simplemente ignora este correo y no pasará nada.</p>";
+        $email_content .= "<p style='margin-bottom:25px;'>Para resetear tu contraseña, visita la siguiente dirección:</p>";
+        $email_content .= '[jacobo_email_button text="Resetear Contraseña" href="' . esc_url( $reset_link ) . '"]'; // Placeholder para botón
+        $email_content .= "<p style='font-size:12px; color:#94A3B8; margin-top:25px;'>Si no puedes hacer clic en el enlace, cópialo y pégalo en tu navegador.</p>";
+
+        // Reemplazar el placeholder del botón con el HTML real del botón
+        $button_html = '<p style="text-align:center; margin-top:20px; margin-bottom:20px;"><a href="' . esc_url( $reset_link ) . '" class="button" style="background-color:#00F6FF; border-radius:5px; color:#0A0C1F; display:inline-block; padding:10px 20px; text-decoration:none; font-weight:bold; font-family: Inter, Arial, sans-serif;">Resetear Contraseña</a></p>';
+        $email_content = str_replace('[jacobo_email_button text="Resetear Contraseña" href="' . esc_url( $reset_link ) . '"]', $button_html, $email_content);
+
+        return jacobo_get_email_template_html( $email_content, 'Reseteo de Contraseña' );
+    }
+}
+add_filter( 'retrieve_password_message', 'jacobo_retrieve_password_message', 10, 4 );
+
+// Asegurar que los emails de WP se envíen como HTML
+add_filter( 'wp_mail_content_type', function() {
+    return 'text/html';
+});
+
+// --- Fin Personalización de Emails ---
