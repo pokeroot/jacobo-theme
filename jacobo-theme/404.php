@@ -52,7 +52,8 @@ $random_tip = $jacobo_tips[array_rand($jacobo_tips)];
                        class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300">
                         Volver al Inicio
                     </a>
-                    <a href="/dashboard/" <!-- Asumiendo que tu dashboard está en /dashboard/ -->
+                    <!-- Asumiendo que tu dashboard está en /dashboard/ -->
+                    <a href="/dashboard/"
                        class="w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300">
                         Ir a mi Dashboard
                     </a>
