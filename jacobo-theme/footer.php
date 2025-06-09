@@ -34,8 +34,8 @@
             <div>
                 <h5 class="font-sora text-blancoPuro font-semibold mb-4">Producto</h5>
                 <ul class="space-y-2">
-                    <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Funcionalidades</a></li>
-                    <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Precios</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Funcionalidades</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/precios')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Precios</a></li>
                     <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Cómo Empezar</a></li>
                     <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Casos de Éxito</a></li>
                 </ul>
@@ -43,7 +43,7 @@
             <div>
                 <h5 class="font-sora text-blancoPuro font-semibold mb-4">Recursos</h5>
                 <ul class="space-y-2">
-                    <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Blog</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/blog')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Blog</a></li>
                     <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Documentación</a></li>
                     <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Soporte</a></li>
                     <li><a href="#" class="text-grisClaro hover:text-blancoPuro text-sm">Glosario IA</a></li>
