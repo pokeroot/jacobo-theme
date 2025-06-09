@@ -1,0 +1,30 @@
+# WordPress
+wp-admin/
+wp-content/plugins/
+wp-content/themes/
+wp-includes/
+index.php
+license.txt
+readme.html
+wp-activate.php
+wp-blog-header.php
+wp-comments-post.php
+wp-config-sample.php
+wp-config.php
+wp-cron.php
+wp-links-opml.php
+wp-load.php
+wp-login.php
+wp-mail.php
+wp-settings.php
+wp-signup.php
+wp-trackback.php
+xmlrpc.php
+
+# WooCommerce
+wp-content/plugins/woocommerce/
+woocommerce.zip
+woocommerce_temp/
+
+# Exclude the theme I'm working on from being ignored
+!wp-content/themes/jacobo-theme/
