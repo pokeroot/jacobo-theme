@@ -79,11 +79,10 @@
 
 <style>
     /* Estilos para forzar el tamaño del logo en el footer */
-    .footer-logo a.custom-logo-link, /* Aplicar a la etiqueta <a> */
-    .footer-logo img.custom-logo {   /* Aplicar a la etiqueta <img> */
+    .footer-logo a.custom-logo-link, /* Aplicar a la etiqueta <a> para transparencia */
+    .footer-logo img.custom-logo {   /* Aplicar a la etiqueta <img> para transparencia y estilos base */
         background-color: transparent !important;
         background: none !important; /* Para mayor seguridad */
-        /* Las siguientes propiedades son más para la imagen en sí, no para el enlace */
     }
 
     .footer-logo img.custom-logo { /* Estilos específicos para la imagen */
@@ -92,12 +91,23 @@
         object-fit: contain; /* Evita que la imagen se deforme */
         border-radius: 1.5rem; /* Bordes redondeados para un look moderno */
         transition: all 0.3s ease-in-out;
-        /* La sombra y animación se aplican mejor a la imagen */
+
+        /* --- EFECTO 1: RESPLANDOR PULSANTE (DE LA RAMA ENTRANTE) --- */
         box-shadow: 0 0 20px rgba(79, 70, 229, 0.4), 0 0 40px rgba(56, 189, 248, 0.2);
         animation: pulse-glow 4s infinite alternate;
+
+        /* --- EFECTO 2: BORDE CON GRADIENTE ESTÁTICO (DESACTIVADO - DE LA RAMA ENTRANTE) --- */
+        /* Para usar este, comenta las líneas de 'box-shadow' y 'animation' de arriba */
+        /* y descomenta las siguientes 3 líneas. */
+        /*
+        border: 2px solid transparent;
+        background: linear-gradient(#0f172a, #0f172a) padding-box, linear-gradient(135deg, #6366f1, #06b6d4) border-box;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        */
     }
 
-    .footer-logo a.custom-logo-link:hover img.custom-logo { /* Estilo hover para la imagen a través del enlace */
+    /* Aplicar el hover al enlace para que afecte a la imagen */
+    .footer-logo a.custom-logo-link:hover img.custom-logo {
         transform: scale(1.05); /* Efecto de zoom al pasar el ratón */
     }
 
