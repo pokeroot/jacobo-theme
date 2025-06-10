@@ -36,31 +36,38 @@ get_header();
                     <p class="text-lg text-gray-800 font-semibold"><?php echo esc_html( $current_user->user_email ); ?></p>
                 </div>
                 <?php
+                $user_id = $current_user->ID; // $current_user ya debería estar definido por el código al inicio del archivo
                 $plan_name = 'Sin plan activo'; // Valor por defecto
-                if ( function_exists('wcs_get_users_subscriptions') && isset($current_user) ) {
-                    $user_id = $current_user->ID;
-                    $subscriptions = wcs_get_users_subscriptions( $user_id );
+
+                // Comprobar si la función de YITH existe para evitar errores fatales.
+                if ( function_exists('yith_wcs_get_user_subscriptions') ) {
+                    $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['subscription_status' => 'active'] );
 
                     if ( ! empty( $subscriptions ) ) {
-                        foreach ( $subscriptions as $subscription_id => $subscription ) {
-                            // Asegurarse de que $subscription es un objeto WC_Subscription
-                            if ( is_object($subscription) && method_exists($subscription, 'has_status') && $subscription->has_status( ['active'] ) ) {
-                                foreach ( $subscription->get_items() as $item_id => $item ) {
-                                    // Asegurarse de que $item es un objeto WC_Order_Item_Product
-                                    if ( is_object($item) && method_exists($item, 'get_product') ) {
-                                        $product = $item->get_product();
-                                        if ( is_object($product) && method_exists($product, 'get_name') ) {
-                                            $plan_name = $product->get_name();
-                                            break; // Salir del bucle de items
-                                        }
-                                    }
-                                }
-                                break; // Salir del bucle de suscripciones
-                            }
+                        // Obtener la primera suscripción activa
+                        // La función yith_wcs_get_user_subscriptions puede devolver un array de objetos de suscripción YITH
+                        $first_active_subscription = reset( $subscriptions );
+                        if ( is_object($first_active_subscription) && method_exists($first_active_subscription, 'get_product_name') ) {
+                            $plan_name = $first_active_subscription->get_product_name();
+                        } elseif (is_object($first_active_subscription) && method_exists($first_active_subscription, 'get_name')) {
+                            // Fallback por si get_product_name() no existe pero get_name() sí (depende de la versión/objeto de YITH)
+                            $plan_name = $first_active_subscription->get_name();
                         }
+                        // Si se necesita iterar y verificar productos dentro de la suscripción (más complejo, como en wcs_)
+                        // else if (is_object($first_active_subscription) && method_exists($first_active_subscription, 'get_items')) {
+                        //    foreach ($first_active_subscription->get_items() as $item) {
+                        //        $_product = $item->get_product();
+                        //        if ($_product) {
+                        //            $plan_name = $_product->get_name();
+                        //            break;
+                        //        }
+                        //    }
+                        // }
                     }
-                } elseif ( ! function_exists('wcs_get_users_subscriptions') ) {
-                    $plan_name = 'WooCommerce Subscriptions no está activo.';
+                } elseif ( !isset($current_user) ) {
+                    $plan_name = 'Usuario no definido.'; // Caso improbable si el chequeo inicial funciona
+                } else {
+                    $plan_name = 'YITH Subscriptions no está activo.';
                 }
                 ?>
                 <div>

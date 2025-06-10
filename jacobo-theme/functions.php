@@ -835,3 +835,13 @@ function jacobo_hide_admin_bar_for_non_admins() {
     }
 }
 add_action( 'after_setup_theme', 'jacobo_hide_admin_bar_for_non_admins' );
+
+/**
+ * Oculta la pestaña "Descargas" del menú de la página "Mi Cuenta" de WooCommerce.
+ */
+function jacobo_remove_my_account_downloads_tab( $items ) {
+    // 'downloads' es el "slug" o "key" del endpoint que queremos eliminar.
+    unset( $items['downloads'] );
+    return $items;
+}
+add_filter( 'woocommerce_account_menu_items', 'jacobo_remove_my_account_downloads_tab' );
