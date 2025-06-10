@@ -45,7 +45,7 @@ get_header();
         <div class="bg-gray-800/20 rounded-xl shadow-xl border border-gray-700/50 p-6">
             <h2 class="font-sora text-xl font-semibold text-blancoPuro mb-2">Estado de tu Suscripción</h2>
             <p class="text-grisClaro">Plan: <span class="font-bold text-cianElectrico">Pro</span></p>
-            <a href="#" class="text-cianElectrico hover:text-violetaNeon mt-4 inline-block text-sm">Administrar Suscripción &rarr;</a>
+            <a href="<?php echo function_exists('wc_get_account_endpoint_url') ? esc_url( wc_get_account_endpoint_url( 'subscriptions' ) ) : '#error-wc-subscriptions-link'; ?>" class="text-cianElectrico hover:text-violetaNeon mt-4 inline-block text-sm">Administrar Suscripción &rarr;</a>
         </div>
 
         <!-- Card Estadísticas de Uso -->
