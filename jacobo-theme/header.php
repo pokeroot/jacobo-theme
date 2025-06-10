@@ -18,32 +18,43 @@
 
         <!-- Navegación Central -->
         <nav class="hidden md:flex space-x-6" aria-label="Navegación Principal">
-            <a href="#" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Funcionalidades</a>
-            <a href="/precios" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Precios</a>
-            <a href="#" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Blog</a>
+            <a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Funcionalidades</a>
+            <a href="<?php echo esc_url(home_url('/precios')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Precios</a>
+            <a href="<?php echo esc_url(home_url('/blog')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Blog</a>
         </nav>
 
         <!-- Botones Derecha -->
         <div class="flex items-center space-x-4">
-            <a href="/login" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Iniciar Sesión</a>
-            <a href="/precios"
-               class="font-inter text-blancoPuro text-sm font-semibold px-6 py-2 rounded-md
-                      bg-gradient-to-r from-cianElectrico to-violetaNeon
-                      hover:from-violetaNeon hover:to-cianElectrico
-                      transition-all duration-300 ease-in-out transform hover:scale-105">
-                Registrarse Gratis
-            </a>
-            <button id="mobileMenuToggle" class="md:hidden text-blancoPuro" aria-label="Abrir menú móvil" aria-expanded="false" aria-controls="mobileMenu">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-            </button>
+                <?php if ( ! is_user_logged_in() ) : ?>
+                    <a href="<?php echo esc_url( wp_login_url( home_url('/dashboard/') ) ); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Iniciar Sesión</a>
+                    <a href="<?php echo esc_url( home_url('/precios') ); ?>"
+                       class="font-inter text-blancoPuro text-sm font-semibold px-6 py-2 rounded-md
+                              bg-gradient-to-r from-cianElectrico to-violetaNeon
+                              hover:from-violetaNeon hover:to-cianElectrico
+                              transition-all duration-300 ease-in-out transform hover:scale-105">
+                        Registrarse Gratis
+                    </a>
+                <?php else : ?>
+                    <?php
+                    // Podríamos obtener el $current_user aquí si quisiéramos mostrar su nombre en el header,
+                    // pero el issue solo pide "Mi Dashboard" y "Cerrar Sesión".
+                    // $current_user = wp_get_current_user();
+                    // $display_name = $current_user->display_name;
+                    ?>
+                    <a href="<?php echo esc_url( home_url('/dashboard/') ); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Mi Dashboard</a>
+                    <a href="<?php echo esc_url( wp_logout_url( home_url('/') ) ); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Cerrar Sesión</a>
+                <?php endif; ?>
+                <button id="mobileMenuToggle" class="md:hidden text-blancoPuro" aria-label="Abrir menú móvil" aria-expanded="false" aria-controls="mobileMenu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
         </div>
     </div>
     <!-- Menú Móvil (oculto por defecto) -->
     <div id="mobileMenu" class="md:hidden hidden bg-azulNoche/95 backdrop-blur-md mt-0 shadow-xl absolute top-full left-0 right-0">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Funcionalidades</a>
-            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Precios</a>
-            <a href="#" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Blog</a>
+            <a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Funcionalidades</a>
+            <a href="<?php echo esc_url(home_url('/precios')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Precios</a>
+            <a href="<?php echo esc_url(home_url('/blog')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Blog</a>
         </div>
     </div>
 </header>

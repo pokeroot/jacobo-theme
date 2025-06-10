@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
             'Content-Type': 'application/json',
         };
         // Incluir Nonce si está disponible y es necesario para el endpoint
-        // if (typeof jacoboPluginData !== 'undefined' && jacoboPluginData.nonce) {
-        //     headers['X-WP-Nonce'] = jacoboPluginData.nonce;
-        // }
+        if (typeof jacoboPluginData !== 'undefined' && jacoboPluginData.nonce) {
+            headers['X-WP-Nonce'] = jacoboPluginData.nonce;
+        }
 
         fetch(endpointUrl, {
             method: 'GET',

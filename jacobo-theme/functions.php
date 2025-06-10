@@ -751,3 +751,74 @@ add_filter( 'wp_mail_content_type', function() {
 });
 
 // --- Fin Personalización de Emails ---
+
+// Hook para registrar los endpoints de la API REST
+add_action( 'rest_api_init', 'jacobo_register_sugerencias_endpoint' );
+
+/**
+ * Registra el endpoint para obtener sugerencias de Jacobo.
+ */
+function jacobo_register_sugerencias_endpoint() {
+    register_rest_route( 'jacobo/v1', '/sugerencias', array(
+        'methods'             => WP_REST_Server::READABLE, // Equivalente a 'GET'
+        'callback'            => 'jacobo_get_sugerencias_callback',
+        'permission_callback' => 'jacobo_sugerencias_permission_callback', // Quién puede acceder
+    ) );
+}
+
+/**
+ * Función callback para manejar la petición al endpoint /sugerencias.
+ *
+ * @param WP_REST_Request $request Datos de la petición.
+ * @return WP_REST_Response|WP_Error Respuesta con los datos de las sugerencias o un error.
+ */
+function jacobo_get_sugerencias_callback( WP_REST_Request $request ) {
+    // IMPORTANTE: Reemplaza esta lógica con la forma real de obtener tus sugerencias.
+    // Esto es solo un ejemplo con datos estáticos.
+    $sugerencias = array(
+        array(
+            'id' => 1,
+            'titulo' => 'Crea una campaña para el Día de la Madre',
+            'descripcion' => 'Aprovecha esta fecha especial para conectar con tus clientes.',
+            'cta_texto' => 'Empezar campaña',
+            'cta_url' => '#campana-dia-madre-placeholder', // Reemplazar con URL real o lógica
+            'icono' => '💐' // Ejemplo de icono
+        ),
+        array(
+            'id' => 2,
+            'titulo' => 'Optimiza tu SEO con IA',
+            'descripcion' => 'Descubre palabras clave y estrategias de contenido para mejorar tu ranking.',
+            'cta_texto' => 'Ver estrategias SEO',
+            'cta_url' => '#seo-estrategias-placeholder',
+            'icono' => '🔍'
+        ),
+        array(
+            'id' => 3,
+            'titulo' => 'Lanza un webinar interactivo',
+            'descripcion' => 'Conecta con tu audiencia en tiempo real y muestra el valor de Jacobo.',
+            'cta_texto' => 'Planificar webinar',
+            'cta_url' => '#webinar-plan-placeholder',
+            'icono' => '🎙️'
+        )
+    );
+
+    if ( empty( $sugerencias ) ) {
+        return new WP_REST_Response( array(), 200 );
+    }
+
+    return new WP_REST_Response( $sugerencias, 200 );
+}
+
+/**
+ * Callback para verificar los permisos de acceso al endpoint /sugerencias.
+ *
+ * @param WP_REST_Request $request Datos de la petición.
+ * @return bool|WP_Error True si el usuario tiene permiso, WP_Error si no.
+ */
+function jacobo_sugerencias_permission_callback( WP_REST_Request $request ) {
+    // Por ahora, solo los usuarios logueados pueden acceder.
+    if ( ! is_user_logged_in() ) {
+        return new WP_Error( 'rest_forbidden', esc_html__( 'Necesitas iniciar sesión para ver las sugerencias.', 'jacobo-theme' ), array( 'status' => 401 ) );
+    }
+    return true;
+}

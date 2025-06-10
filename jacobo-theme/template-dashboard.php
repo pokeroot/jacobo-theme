@@ -9,7 +9,19 @@ get_header();
 <main id="content" class="flex-grow pt-16 md:pt-20">
 <div class="container mx-auto px-4 py-8">
 
-    <h1 class="font-sora text-4xl sm:text-5xl font-bold text-blancoPuro mb-10 md:mb-12">Bienvenido a tu Dashboard, [Usuario]!</h1>
+    <?php
+    if ( is_user_logged_in() ) {
+        $current_user = wp_get_current_user();
+        // Usar display_name como primera opción, o user_login como fallback si display_name está vacío.
+        $user_name = !empty($current_user->display_name) ? $current_user->display_name : $current_user->user_login;
+        echo '<h1 class="font-sora text-4xl sm:text-5xl font-bold text-blancoPuro mb-10 md:mb-12">Bienvenido a tu Dashboard, ' . esc_html($user_name) . '!</h1>';
+    } else {
+        // Opcional: Si un usuario no logueado de alguna forma accede a esta plantilla,
+        // podríamos mostrar un mensaje alternativo o nada.
+        // Por ahora, si no está logueado, no se mostrará el h1.
+        // echo '<h1 class="font-sora text-4xl sm:text-5xl font-bold text-blancoPuro mb-10 md:mb-12">Bienvenido al Dashboard</h1>';
+    }
+    ?>
 
     <!-- Sección Sugerencias de Jacobo -->
     <div id="jacoboSuggestionsSection" class="mb-8 bg-gray-800/30 backdrop-blur-md rounded-xl shadow-2xl p-6 border border-gray-700/50">
@@ -33,7 +45,7 @@ get_header();
         <div class="bg-gray-800/20 rounded-xl shadow-xl border border-gray-700/50 p-6">
             <h2 class="font-sora text-xl font-semibold text-blancoPuro mb-2">Estado de tu Suscripción</h2>
             <p class="text-grisClaro">Plan: <span class="font-bold text-cianElectrico">Pro</span></p>
-            <a href="#" class="text-cianElectrico hover:text-violetaNeon mt-4 inline-block text-sm">Administrar Suscripción &rarr;</a>
+            <a href="<?php echo function_exists('wc_get_account_endpoint_url') ? esc_url( wc_get_account_endpoint_url( 'subscriptions' ) ) : '#error-wc-subscriptions-link'; ?>" class="text-cianElectrico hover:text-violetaNeon mt-4 inline-block text-sm">Administrar Suscripción &rarr;</a>
         </div>
 
         <!-- Card Estadísticas de Uso -->
