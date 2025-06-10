@@ -19,7 +19,7 @@
         <!-- Navegación Central -->
         <nav class="hidden md:flex space-x-6" aria-label="Navegación Principal">
             <a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Funcionalidades</a>
-            <a href="<?php echo esc_url(home_url('/pricing')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Precios</a>
+            <a href="<?php echo esc_url(home_url('/precios')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Precios</a>
             <a href="<?php echo esc_url(home_url('/blog')); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors">Blog</a>
         </nav>
 
@@ -27,7 +27,7 @@
         <div class="flex items-center space-x-4">
                 <?php if ( ! is_user_logged_in() ) : ?>
                     <a href="<?php echo esc_url( wp_login_url( home_url('/dashboard/') ) ); ?>" class="font-inter text-grisClaro hover:text-blancoPuro transition-colors text-sm">Iniciar Sesión</a>
-                    <a href="<?php echo esc_url( home_url('/pricing') ); ?>"
+                    <a href="<?php echo esc_url( home_url('/precios') ); ?>"
                        class="font-inter text-blancoPuro text-sm font-semibold px-6 py-2 rounded-md
                               bg-gradient-to-r from-cianElectrico to-violetaNeon
                               hover:from-violetaNeon hover:to-cianElectrico
@@ -53,7 +53,7 @@
     <div id="mobileMenu" class="md:hidden hidden bg-azulNoche/95 backdrop-blur-md mt-0 shadow-xl absolute top-full left-0 right-0">
         <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Funcionalidades</a>
-            <a href="<?php echo esc_url(home_url('/pricing')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Precios</a>
+            <a href="<?php echo esc_url(home_url('/precios')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Precios</a>
             <a href="<?php echo esc_url(home_url('/blog')); ?>" class="block px-3 py-2 rounded-md text-base font-medium font-inter text-grisClaro hover:text-blancoPuro hover:bg-gray-700/50">Blog</a>
         </div>
     </div>

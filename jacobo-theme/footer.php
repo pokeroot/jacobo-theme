@@ -44,7 +44,7 @@
                 <h5 class="font-sora text-blancoPuro font-semibold mb-4">Producto</h5>
                 <ul class="space-y-2">
                     <li><a href="<?php echo esc_url(home_url('/#funcionalidades')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Funcionalidades</a></li>
-                    <li><a href="<?php echo esc_url(home_url('/pricing')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Precios</a></li>
+                    <li><a href="<?php echo esc_url(home_url('/precios')); ?>" class="text-grisClaro hover:text-blancoPuro text-sm">Precios</a></li>
                     <li><a href="/como-empezar/" class="text-grisClaro hover:text-blancoPuro text-sm">Cómo Empezar</a></li>
                     <li><a href="/casos-de-exito/" class="text-grisClaro hover:text-blancoPuro text-sm">Casos de Éxito</a></li>
                 </ul>
