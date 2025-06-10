@@ -1,4 +1,11 @@
 <?php
+if ( ! is_user_logged_in() ) {
+    // Redirigir a la página de login, y que después del login vuelva a esta página de perfil.
+    wp_redirect( esc_url( wp_login_url( get_permalink() ) ) );
+    exit;
+}
+$current_user = wp_get_current_user();
+
 /**
  * Template Name: Perfil y Facturación
  * Template Post Type: page
@@ -22,22 +29,50 @@ get_header();
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Nombre de Usuario:</label>
-                    <p class="text-lg text-gray-800 font-semibold">[Nombre del Usuario]</p>
+                    <p class="text-lg text-gray-800 font-semibold"><?php echo esc_html( $current_user->display_name ); ?></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Correo Electrónico:</label>
-                    <p class="text-lg text-gray-800 font-semibold">[Email del Usuario]</p>
+                    <p class="text-lg text-gray-800 font-semibold"><?php echo esc_html( $current_user->user_email ); ?></p>
                 </div>
+                <?php
+                $plan_name = 'Sin plan activo'; // Valor por defecto
+                if ( function_exists('wcs_get_users_subscriptions') && isset($current_user) ) {
+                    $user_id = $current_user->ID;
+                    $subscriptions = wcs_get_users_subscriptions( $user_id );
+
+                    if ( ! empty( $subscriptions ) ) {
+                        foreach ( $subscriptions as $subscription_id => $subscription ) {
+                            // Asegurarse de que $subscription es un objeto WC_Subscription
+                            if ( is_object($subscription) && method_exists($subscription, 'has_status') && $subscription->has_status( ['active'] ) ) {
+                                foreach ( $subscription->get_items() as $item_id => $item ) {
+                                    // Asegurarse de que $item es un objeto WC_Order_Item_Product
+                                    if ( is_object($item) && method_exists($item, 'get_product') ) {
+                                        $product = $item->get_product();
+                                        if ( is_object($product) && method_exists($product, 'get_name') ) {
+                                            $plan_name = $product->get_name();
+                                            break; // Salir del bucle de items
+                                        }
+                                    }
+                                }
+                                break; // Salir del bucle de suscripciones
+                            }
+                        }
+                    }
+                } elseif ( ! function_exists('wcs_get_users_subscriptions') ) {
+                    $plan_name = 'WooCommerce Subscriptions no está activo.';
+                }
+                ?>
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Plan Actual:</label>
-                    <p class="text-lg text-indigo-600 font-bold">[Plan Pro]</p>
+                    <p class="text-lg text-indigo-600 font-bold"><?php echo esc_html( $plan_name ); ?></p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-500">Miembro Desde:</label>
-                    <p class="text-lg text-gray-800 font-semibold">[Fecha de Registro]</p>
+                    <p class="text-lg text-gray-800 font-semibold"><?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $current_user->user_registered ) ) ); ?></p>
                 </div>
                 <div class="pt-5">
-                    <a href="#edit-profile-link"
+                    <a href="<?php echo esc_url( get_edit_profile_url( $current_user->ID ) ); ?>"
                        class="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium group transition-colors duration-150">
                         Editar Perfil
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform duration-150" viewBox="0 0 20 20" fill="currentColor">
@@ -60,7 +95,7 @@ get_header();
             <p class="text-gray-600 mb-6 leading-relaxed">
                 Administra tu plan, revisa tu historial de facturación y actualiza tus métodos de pago de forma segura.
             </p>
-            <a href="#woocommerce-subscriptions-page"
+            <a href="<?php echo function_exists('wc_get_account_endpoint_url') ? esc_url( wc_get_account_endpoint_url( 'subscriptions' ) ) : '#error-wc-subscriptions-link'; ?>"
                class="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-4 px-6 rounded-lg text-lg text-center inline-block transition-all duration-300 ease-in-out shadow-md hover:shadow-lg transform hover:scale-105">
                 Gestionar mi Suscripción y Facturación
             </a>
