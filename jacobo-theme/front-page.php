@@ -29,7 +29,7 @@ get_header();
                     <p class="font-inter text-lg lg:text-xl text-grisClaro mb-10">
                         Jacobo es tu copiloto de IA que transforma objetivos de marketing en campañas completas y optimizadas. Dile adiós al trabajo manual, hola a la estrategia potenciada.
                     </p>
-                    <a href="<?php echo esc_url(home_url('/precios')); ?>"
+                    <a href="<?php echo esc_url(home_url('/pricing')); ?>"
                        class="inline-block font-inter text-blancoPuro text-lg font-semibold px-10 py-4 rounded-lg
                               bg-gradient-to-r from-cianElectrico to-violetaNeon
                               hover:from-violetaNeon hover:to-cianElectrico
@@ -202,7 +202,7 @@ get_header();
             <p class="font-inter text-lg text-grisClaro max-w-xl mx-auto mb-10">
                 Únete a la revolución. Prueba Jacobo gratis y comprueba cómo la inteligencia artificial puede transformar tu marketing.
             </p>
-            <a href="<?php echo esc_url(home_url('/precios')); ?>"
+            <a href="<?php echo esc_url(home_url('/pricing')); ?>"
                class="inline-block font-inter text-blancoPuro text-xl font-semibold px-12 py-5 rounded-lg
                       bg-gradient-to-r from-cianElectrico to-violetaNeon
                       hover:from-violetaNeon hover:to-cianElectrico
