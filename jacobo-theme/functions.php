@@ -822,3 +822,16 @@ function jacobo_sugerencias_permission_callback( WP_REST_Request $request ) {
     }
     return true;
 }
+
+/**
+ * Oculta la Barra de Administración de WordPress para todos los usuarios
+ * excepto para los que tienen la capacidad de 'manage_options' (administradores).
+ */
+function jacobo_hide_admin_bar_for_non_admins() {
+    // Comprueba si el usuario actual NO tiene la capacidad de gestionar opciones.
+    if ( ! current_user_can( 'manage_options' ) ) {
+        // Si no es un administrador, oculta la barra.
+        add_filter( 'show_admin_bar', '__return_false' );
+    }
+}
+add_action( 'after_setup_theme', 'jacobo_hide_admin_bar_for_non_admins' );
