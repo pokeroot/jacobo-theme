@@ -844,4 +844,157 @@ function jacobo_remove_my_account_downloads_tab( $items ) {
     unset( $items['downloads'] );
     return $items;
 }
-add_filter( 'woocommerce_account_menu_items', 'jacobo_remove_my_account_downloads_tab' );
+// Usar una prioridad alta como 99 para asegurar que se ejecute después de que otros plugins/temas añadan items.
+add_filter( 'woocommerce_account_menu_items', 'jacobo_remove_my_account_downloads_tab', 99, 1 );
+
+/*
+function jacobo_update_user_role_on_order_status_change( $order_id, $old_status, $new_status ) {
+    $order = wc_get_order( $order_id );
+
+    // Salir si no es un objeto de pedido válido
+    if ( ! $order ) {
+        return;
+    }
+
+    $user_id = $order->get_user_id();
+
+    // Salir si no hay un usuario asociado al pedido o si el ID es 0.
+    if ( ! $user_id || $user_id == 0) {
+        return;
+    }
+
+    $user = get_user_by( 'id', $user_id );
+
+    // Salir si no se puede obtener el objeto de usuario.
+    if ( ! $user ) {
+        return;
+    }
+
+    // ESCENARIO 1: PAGO EXITOSO (Se activa la suscripción o se completa un pedido)
+    // 'processing' y 'completed' son los estados típicos de un pago exitoso.
+    // Podrías añadir 'active' si YITH usa este estado para pedidos de activación de suscripción.
+    if ( in_array( $new_status, ['processing', 'completed'] ) ) {
+        // Asigna el rol personalizado si el usuario tiene un rol de 'customer' o 'subscriber' (roles por defecto de WooCommerce/WordPress)
+        // Esto evita cambiar el rol si un admin u otro rol con capacidades hace una compra.
+        if ( array_intersect( ['customer', 'subscriber'], $user->roles ) ) {
+            $user->set_role( 'cliente_jacobo' );
+        }
+    }
+
+    // ESCENARIO 2: PAGO FALLIDO O CANCELADO
+    // Podrías añadir 'pending' o 'on-hold' si quieres ser más estricto con pagos no completados.
+    if ( in_array( $new_status, ['failed', 'cancelled'] ) ) {
+        // Comprobar si el usuario NO tiene otras suscripciones activas antes de degradarlo.
+        $has_active_subscription = false;
+        if ( function_exists('yith_wcs_get_user_subscriptions') ) {
+            // Asegurarse de que el array de consulta para yith_wcs_get_user_subscriptions sea correcto.
+            // A veces es ['status' => 'active'] o similar. Consultar documentación de YITH.
+            // El ejemplo original usaba ['subscription_status' => 'active']
+            $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['status' => 'active'] ); // Ajustado 'status' según uso común.
+            if ( ! empty( $subscriptions ) ) {
+                $has_active_subscription = true;
+            }
+        } else {
+            // Si la función de YITH no existe, no podemos verificar suscripciones.
+            // Podríamos loggear un error aquí o decidir un comportamiento por defecto.
+            // Por seguridad, no degradaremos el rol si no podemos verificar.
+            return;
+        }
+
+        // Si no tiene otras suscripciones activas Y el rol actual es 'cliente_jacobo' (para no afectar a nuevos registros fallidos que ya son 'subscriber')
+        // o si el rol actual es 'customer' (caso de un primer registro fallido donde WooCommerce lo puso como customer)
+        if ( ! $has_active_subscription && ( in_array('cliente_jacobo', $user->roles) || in_array('customer', $user->roles) ) ) {
+            $user->set_role( 'subscriber' );
+        }
+    }
+}
+add_action( 'woocommerce_order_status_changed', 'jacobo_update_user_role_on_order_status_change', 10, 4 );
+*/
+
+/**
+ * Redirige a los usuarios al dashboard principal después de una compra.
+ */
+function jacobo_custom_thankyou_redirect( $order_id ){
+    // URL de nuestro dashboard principal.
+    // Asegúrate de que el slug '/dashboard-principal/' sea correcto.
+    $dashboard_url = home_url('/dashboard-principal/');
+    if ( ! $order_id ){
+        return;
+    }
+    // Comprobar si el pedido existe y es válido
+    $order = wc_get_order( $order_id );
+    if ( ! $order ) {
+        return;
+    }
+    wp_safe_redirect( $dashboard_url );
+    exit;
+}
+add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect' );
+
+/**
+ * Tarea 1: Asigna el rol 'cliente_jacobo' SÓLO cuando una suscripción de YITH se activa.
+ * Este es el único método para ascender de rol.
+ */
+function jacobo_assign_role_on_subscription_activated( $subscription ) {
+    // Asegurarse de que $subscription es un objeto y tiene el método get_user_id
+    if ( is_object($subscription) && method_exists($subscription, 'get_user_id') ) {
+        $user_id = $subscription->get_user_id();
+        if ( $user_id ) {
+            $user = get_user_by( 'id', $user_id );
+            if ( $user ) {
+                $user->set_role( 'cliente_jacobo' );
+            }
+        }
+    }
+}
+// YITH usa este hook cuando una suscripción se activa
+add_action( 'yith_wcs_subscription_activated', 'jacobo_assign_role_on_subscription_activated' );
+
+/**
+ * Tarea 2: Elimina la cuenta de usuario si su primer pedido falla.
+ * Esto previene la creación de "cuentas huérfanas" con pagos fallidos.
+ */
+function jacobo_handle_failed_order_user_creation( $order_id, $old_status, $new_status ) {
+    // Solo actuar si el nuevo estado es 'failed' o 'cancelled'
+    if ( ! in_array( $new_status, ['failed', 'cancelled'] ) ) {
+        return;
+    }
+
+    $order = wc_get_order( $order_id );
+
+    // Salir si no es un objeto de pedido válido
+    if ( ! $order ) {
+        return;
+    }
+
+    $user_id = $order->get_user_id();
+
+    // Salir si no hay un usuario asociado al pedido o si el ID es 0 (invitado).
+    if ( ! $user_id || $user_id == 0 ) {
+        return;
+    }
+
+    // Comprobar si el usuario tiene OTRAS suscripciones activas antes de eliminarlo.
+    $has_other_active_subscriptions = false;
+    if ( function_exists('yith_wcs_get_user_subscriptions') ) {
+        // Usar el parámetro de status correcto para YITH. El issue indicaba ['subscription_status' => 'active']
+        $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['subscription_status' => 'active'] );
+        if ( ! empty( $subscriptions ) ) {
+            $has_other_active_subscriptions = true;
+        }
+    } else {
+        // Si la función de YITH no existe, no podemos estar seguros. No eliminar al usuario.
+        // Podrías loggear un error aquí.
+        return;
+    }
+
+    // Si NO tiene otras suscripciones activas, significa que era su primer intento de compra.
+    if ( ! $has_other_active_subscriptions ) {
+         // Incluir el archivo necesario para la función de eliminación de usuario.
+        if ( ! function_exists('wp_delete_user') ) {
+            require_once( ABSPATH . 'wp-admin/includes/user.php' );
+        }
+        wp_delete_user( $user_id );
+    }
+}
+add_action( 'woocommerce_order_status_changed', 'jacobo_handle_failed_order_user_creation', 10, 3 );
