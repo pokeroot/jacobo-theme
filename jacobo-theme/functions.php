@@ -951,53 +951,56 @@ function jacobo_assign_role_on_subscription_activated( $subscription ) {
 add_action( 'yith_wcs_subscription_activated', 'jacobo_assign_role_on_subscription_activated' );
 
 /**
- * Tarea 2: Elimina la cuenta de usuario si su primer pedido falla.
- * Esto previene la creación de "cuentas huérfanas" con pagos fallidos.
- * (Nota: El nombre de la función en el issue es jacobo_handle_failed_order_user_creation,
- * pero la descripción y el hook sugieren que es la nueva lógica de eliminación en checkout_order_processed.
- * Se usará el nombre jacobo_delete_user_on_failed_first_order para claridad si este es el definitivo,
- * o se mantendrá jacobo_handle_failed_order_user_creation si así se prefiere para consistencia con el issue).
- * Por ahora, usaré el nombre del issue para la función, pero el hook nuevo.
+ * Elimina la cuenta de un usuario si su primer pedido falla.
+ * Esto previene la creación de "cuentas huérfanas" de forma definitiva.
+ * Se engancha al cambio de estado del pedido, que es más fiable.
+ *
+ * @param int    $order_id El ID del pedido.
+ * @param string $old_status El estado anterior del pedido.
+ * @param string $new_status El nuevo estado del pedido.
  */
-function jacobo_delete_user_on_failed_first_order( $order_id ) { // Nombre de función usado en el último prompt del usuario fue jacobo_delete_user_on_failed_first_order
+function jacobo_delete_user_on_failed_order( $order_id, $old_status, $new_status ) {
+    // Solo nos interesa actuar cuando un pedido cambia a 'failed' o 'cancelled'.
+    if ( ! in_array( $new_status, ['failed', 'cancelled'] ) ) {
+        return;
+    }
+
     $order = wc_get_order( $order_id );
-
-    // Salir si no es un objeto de pedido válido
-    if ( ! $order ) {
+    // Salir si no podemos obtener el pedido o si no hay un ID de usuario asociado (o es 0 para invitados).
+    if ( ! $order || ! ( $user_id = $order->get_user_id() ) || $user_id == 0 ) {
         return;
     }
 
-    $user_id = $order->get_user_id();
-
-    // Salir si no hay usuario o si el pedido no ha fallado.
-    // El hook woocommerce_checkout_order_processed se ejecuta DESPUÉS de procesar el pago.
-    // Por lo tanto, el estado del pedido ya debería estar actualizado (ej. 'failed').
-    if ( ! $user_id || $user_id == 0 || ! $order->has_status( 'failed' ) ) {
-        return;
-    }
-
-    // Contar cuántos pedidos tiene el usuario.
+    // Comprobación CRÍTICA: Asegurarnos de no eliminar a un cliente existente.
+    // Buscamos si el usuario tiene OTRAS compras exitosas o suscripciones activas.
     $customer_orders = wc_get_orders( array(
         'customer' => $user_id,
-        'limit'    => 2, // Solo necesitamos saber si tiene más de 1.
-        'status'   => array_keys( wc_get_order_statuses() ), // Contar todos los estados por si acaso
+        'status'   => array( 'wc-processing', 'wc-completed' ), // Estados de pedidos que indican un pago exitoso en algún momento.
+        'limit'    => 1, // Solo necesitamos saber si existe al menos una.
+        'exclude'  => array( $order_id ), // Excluimos el pedido actual que ha fallado.
     ) );
 
-    $order_count = count( $customer_orders );
+    $has_active_subscription = false;
+    if ( function_exists('yith_wcs_get_user_subscriptions') ) {
+        // Usar el parámetro de status correcto para YITH. El issue indicaba ['subscription_status' => 'active']
+        $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['subscription_status' => 'active'] );
+        if ( ! empty( $subscriptions ) ) {
+            $has_active_subscription = true;
+        }
+    } else {
+        // Si la función de YITH no existe, no podemos estar seguros de las suscripciones.
+        // Considerar loggear un error aquí. Por seguridad, no eliminar si YITH no está o falla.
+        // Alternativamente, si YITH es esencial, se podría tratar esto como un error que impide la lógica.
+        // Por ahora, si YITH no está, no se cumple $has_active_subscription, lo cual es seguro.
+    }
 
-    // Si solo tiene 1 pedido (el que acaba de fallar), eliminar la cuenta.
-    // O si por alguna razón tiene 0 pedidos pero se creó un usuario (menos probable con este hook).
-    if ( $order_count === 1 ) {
-        // Incluir el archivo necesario para la función de eliminación de usuario.
+    // Si el usuario no tiene ninguna otra compra exitosa Y ninguna suscripción activa,
+    // es seguro asumir que este era su primer intento de compra y podemos eliminarlo.
+    if ( empty( $customer_orders ) && ! $has_active_subscription ) {
         if ( ! function_exists('wp_delete_user') ) {
             require_once( ABSPATH . 'wp-admin/includes/user.php' );
         }
         wp_delete_user( $user_id );
     }
 }
-add_action( 'woocommerce_checkout_order_processed', 'jacobo_delete_user_on_failed_first_order', 10, 1 );
-// Nota: El issue original para jacobo_handle_failed_order_user_creation tenía 3 parámetros y se hookeaba a woocommerce_order_status_changed.
-// La nueva versión del issue para la misma Tarea 2 (Elimina cuenta si primer pedido falla) usa el nombre jacobo_handle_failed_order_user_creation
-// pero con la lógica de jacobo_delete_user_on_failed_first_order y el hook woocommerce_checkout_order_processed.
-// Se ha implementado la lógica más reciente con el hook 'woocommerce_checkout_order_processed' y el nombre de función 'jacobo_delete_user_on_failed_first_order'.
-// Si el nombre 'jacobo_handle_failed_order_user_creation' debe ser usado para esta nueva lógica, se puede renombrar.
+add_action( 'woocommerce_order_status_changed', 'jacobo_delete_user_on_failed_order', 10, 3 );
