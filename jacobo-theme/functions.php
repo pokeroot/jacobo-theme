@@ -912,24 +912,35 @@ add_action( 'woocommerce_order_status_changed', 'jacobo_update_user_role_on_orde
 */
 
 /**
- * Redirige a los usuarios al dashboard principal después de una compra.
+ * Redirige a los usuarios al dashboard principal después de una compra
+ * e inicia sesión manualmente al usuario.
  */
 function jacobo_custom_thankyou_redirect( $order_id ){
-    // URL de nuestro dashboard principal.
-    // Asegúrate de que el slug '/dashboard-principal/' sea correcto.
     $dashboard_url = home_url('/dashboard-principal/');
     if ( ! $order_id ){
         return;
     }
-    // Comprobar si el pedido existe y es válido
-    $order = wc_get_order( $order_id );
+
+    $order = wc_get_order($order_id);
+    // Salir si no se puede obtener el objeto de pedido
     if ( ! $order ) {
         return;
     }
+
+    $user_id = $order->get_user_id();
+
+    // Iniciar sesión al usuario manualmente si hay un user_id válido y el usuario no está ya logueado.
+    if ( $user_id && $user_id > 0 ) {
+        if ( !is_user_logged_in() ) {
+             wp_set_current_user($user_id);
+             wp_set_auth_cookie($user_id, true); // true para 'remember me'
+        }
+    }
+
     wp_safe_redirect( $dashboard_url );
     exit;
 }
-add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect' );
+add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect', 10, 1 );
 
 // --- INICIO BLOQUE DE CÓDIGO CONSOLIDADO ---
 
