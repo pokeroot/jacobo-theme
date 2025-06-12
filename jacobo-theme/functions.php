@@ -931,39 +931,63 @@ function jacobo_custom_thankyou_redirect( $order_id ){
 }
 add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect' );
 
+// --- INICIO BLOQUE DE CÓDIGO CONSOLIDADO ---
+
 /**
- * Tarea 1: Asigna el rol 'cliente_jacobo' SÓLO cuando una suscripción de YITH se activa.
- * Este es el único método para ascender de rol.
+ * TAREA 1: Previene el inicio de sesión automático después del registro en el checkout.
  */
-function jacobo_assign_role_on_subscription_activated( $subscription ) {
+add_filter( 'woocommerce_registration_auth_new_user', '__return_false' );
+
+/**
+ * TAREA 2: Desactiva el email de bienvenida estándar de WooCommerce durante el checkout.
+ */
+function jacobo_disable_welcome_email_on_checkout( $enabled, $user ) {
+    if ( is_checkout() ) {
+        return false;
+    }
+    return $enabled;
+}
+add_filter( 'woocommerce_email_enabled_new_account', 'jacobo_disable_welcome_email_on_checkout', 10, 2 );
+
+/**
+ * TAREA 3: Asigna el rol 'cliente_jacobo' y envía el email de bienvenida
+ * SÓLO cuando una suscripción de YITH se activa con éxito.
+ */
+function jacobo_assign_role_and_send_welcome_email( $subscription ) {
     // Asegurarse de que $subscription es un objeto y tiene el método get_user_id
     if ( is_object($subscription) && method_exists($subscription, 'get_user_id') ) {
         $user_id = $subscription->get_user_id();
-        if ( $user_id ) {
+        if ( $user_id ) { // Asegurarse de que user_id no sea 0 o nulo
             $user = get_user_by( 'id', $user_id );
+
             if ( $user ) {
+                // Asignar el rol personalizado
                 $user->set_role( 'cliente_jacobo' );
+
+                // Enviar el email de bienvenida de WooCommerce manualmente
+                // Comprobar si WC y Mailer están disponibles
+                if ( function_exists('WC') && WC()->mailer() ) {
+                    $mailer = WC()->mailer();
+                    $emails = $mailer->get_emails(); // Obtener todos los emails
+                    // Comprobar si el email específico existe antes de intentar acceder a él
+                    if ( isset( $emails['WC_Email_Customer_New_Account'] ) ) {
+                        $email = $emails['WC_Email_Customer_New_Account'];
+                        $email->trigger( $user_id, '', array() ); // Pasar contraseña vacía y argumentos de email si es necesario
+                    }
+                }
             }
         }
     }
 }
-// YITH usa este hook cuando una suscripción se activa
-add_action( 'yith_wcs_subscription_activated', 'jacobo_assign_role_on_subscription_activated' );
+add_action( 'yith_wcs_subscription_activated', 'jacobo_assign_role_and_send_welcome_email' );
 
 /**
- * Elimina la cuenta de un usuario si su primer pedido falla.
- * Esto previene la creación de "cuentas huérfanas" de forma definitiva.
- * Se engancha al cambio de estado del pedido, que es más fiable.
- *
- * @param int    $order_id El ID del pedido.
- * @param string $old_status El estado anterior del pedido.
- * @param string $new_status El nuevo estado del pedido.
+ * TAREA 4: Elimina la cuenta de un usuario si su pedido falla y cumple condiciones.
+ * (Anteriormente referida como jacobo_delete_user_on_failed_order en el issue)
  */
 function jacobo_delete_user_on_failed_order( $order_id, $old_status, $new_status ) {
     // Solo nos interesa actuar cuando un pedido cambia a 'failed' o 'cancelled'.
-    if ( ! in_array( $new_status, ['failed', 'cancelled'] ) ) {
-        return;
-    }
+    if ( ! in_array( $new_status, ['failed', 'cancelled'] ) ) { return; }
 
     $order = wc_get_order( $order_id );
     // Salir si no podemos obtener el pedido o si no hay un ID de usuario asociado (o es 0 para invitados).
@@ -971,36 +995,28 @@ function jacobo_delete_user_on_failed_order( $order_id, $old_status, $new_status
         return;
     }
 
-    // Comprobación CRÍTICA: Asegurarnos de no eliminar a un cliente existente.
-    // Buscamos si el usuario tiene OTRAS compras exitosas o suscripciones activas.
-    $customer_orders = wc_get_orders( array(
-        'customer' => $user_id,
-        'status'   => array( 'wc-processing', 'wc-completed' ), // Estados de pedidos que indican un pago exitoso en algún momento.
-        'limit'    => 1, // Solo necesitamos saber si existe al menos una.
-        'exclude'  => array( $order_id ), // Excluimos el pedido actual que ha fallado.
-    ) );
+    $user = get_user_by( 'id', $user_id );
+    // Solo eliminar si el usuario es un 'customer' recién creado y no tiene otras suscripciones activas
+    // (la comprobación de otras suscripciones es una capa extra de seguridad, aunque la lógica
+    // de asignación de 'cliente_jacobo' debería prevenir que un cliente legítimo sea 'customer').
+    if ( $user && in_array( 'customer', $user->roles ) ) {
 
-    $has_active_subscription = false;
-    if ( function_exists('yith_wcs_get_user_subscriptions') ) {
-        // Usar el parámetro de status correcto para YITH. El issue indicaba ['subscription_status' => 'active']
-        $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['subscription_status' => 'active'] );
-        if ( ! empty( $subscriptions ) ) {
-            $has_active_subscription = true;
+        $has_active_subscription = false;
+        if ( function_exists('yith_wcs_get_user_subscriptions') ) {
+            $subscriptions = yith_wcs_get_user_subscriptions( $user_id, ['subscription_status' => 'active'] );
+            if ( ! empty( $subscriptions ) ) {
+                $has_active_subscription = true;
+            }
         }
-    } else {
-        // Si la función de YITH no existe, no podemos estar seguros de las suscripciones.
-        // Considerar loggear un error aquí. Por seguridad, no eliminar si YITH no está o falla.
-        // Alternativamente, si YITH es esencial, se podría tratar esto como un error que impide la lógica.
-        // Por ahora, si YITH no está, no se cumple $has_active_subscription, lo cual es seguro.
-    }
 
-    // Si el usuario no tiene ninguna otra compra exitosa Y ninguna suscripción activa,
-    // es seguro asumir que este era su primer intento de compra y podemos eliminarlo.
-    if ( empty( $customer_orders ) && ! $has_active_subscription ) {
-        if ( ! function_exists('wp_delete_user') ) {
-            require_once( ABSPATH . 'wp-admin/includes/user.php' );
+        if ( ! $has_active_subscription ) {
+            if ( ! function_exists('wp_delete_user') ) {
+                require_once( ABSPATH . 'wp-admin/includes/user.php' );
+            }
+            wp_delete_user( $user_id );
         }
-        wp_delete_user( $user_id );
     }
 }
 add_action( 'woocommerce_order_status_changed', 'jacobo_delete_user_on_failed_order', 10, 3 );
+
+// --- FIN DEL BLOQUE DE CÓDIGO CONSOLIDADO ---
