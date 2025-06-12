@@ -950,31 +950,20 @@ add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect', 10, 1 );
 add_filter( 'woocommerce_registration_auth_new_user', '__return_false' );
 
 /**
- * TAREA 2: Control Robusto del Email de Bienvenida.
- * Desactiva el email de bienvenida estándar de WooCommerce durante el checkout
- * para usuarios que no son 'cliente_jacobo' o 'administrator'.
+ * TAREA REVISADA: Desactiva el email de bienvenida estándar de WooCommerce durante el checkout.
+ * Esto previene que se envíe un correo antes de confirmar el pago.
+ * Simplificado para ser más directo.
  */
-function jacobo_disable_welcome_email_on_checkout_robust( $enabled, $user_or_user_id ) {
-    $user_obj = null;
-    if ( is_numeric( $user_or_user_id ) ) {
-        $user_obj = get_user_by( 'id', $user_or_user_id );
-    } elseif ( is_object( $user_or_user_id ) && isset($user_or_user_id->ID) ) {
-        $user_obj = $user_or_user_id;
-    }
-
-    if ( ! $user_obj ) {
-        return $enabled; // No se pudo determinar el usuario, mantener comportamiento por defecto
-    }
-
-    // Si estamos en checkout Y el usuario NO tiene el rol 'cliente_jacobo' Y NO es 'administrator',
-    // entonces desactivar el email. Esto permite que el email se envíe si un admin crea una cuenta
-    // o si por alguna razón un 'cliente_jacobo' pasa por este flujo (aunque no debería ser común).
-    if ( is_checkout() && ! array_intersect( ['cliente_jacobo', 'administrator'], $user_obj->roles ) ) {
+function jacobo_disable_new_account_email_on_checkout( $enabled, $user = null ) {
+    if ( is_checkout() ) {
+        // Deshabilitar el email de nueva cuenta si estamos en el proceso de checkout.
+        // Nuestra otra función jacobo_assign_role_and_send_welcome_email lo enviará
+        // SOLO cuando la suscripción YITH se active con éxito.
         return false;
     }
     return $enabled;
 }
-add_filter( 'woocommerce_email_enabled_new_account', 'jacobo_disable_welcome_email_on_checkout_robust', 999, 2 );
+add_filter( 'woocommerce_email_enabled_new_account', 'jacobo_disable_new_account_email_on_checkout', 999, 2 );
 
 /**
  * TAREA 3: Asigna el rol 'cliente_jacobo' y envía el email de bienvenida
