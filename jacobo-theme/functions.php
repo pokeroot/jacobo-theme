@@ -950,22 +950,6 @@ add_action( 'woocommerce_thankyou', 'jacobo_custom_thankyou_redirect', 10, 1 );
 add_filter( 'woocommerce_registration_auth_new_user', '__return_false' );
 
 /**
- * TAREA REVISADA: Desactiva el email de bienvenida estándar de WooCommerce durante el checkout.
- * Esto previene que se envíe un correo antes de confirmar el pago.
- * Simplificado para ser más directo.
- */
-function jacobo_disable_new_account_email_on_checkout( $enabled, $user = null ) {
-    if ( is_checkout() ) {
-        // Deshabilitar el email de nueva cuenta si estamos en el proceso de checkout.
-        // Nuestra otra función jacobo_assign_role_and_send_welcome_email lo enviará
-        // SOLO cuando la suscripción YITH se active con éxito.
-        return false;
-    }
-    return $enabled;
-}
-add_filter( 'woocommerce_email_enabled_new_account', 'jacobo_disable_new_account_email_on_checkout', 999, 2 );
-
-/**
  * TAREA 3: Asigna el rol 'cliente_jacobo' y envía el email de bienvenida
  * SÓLO cuando una suscripción de YITH se activa con éxito.
  */
